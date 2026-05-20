@@ -1,0 +1,43 @@
+# https://github.com/ad-m/github-push-action/issues/96#issuecomment-889984928
+name: remove-dependabot
+run-name: Remove Dependabot
+
+on:
+  # run when push to main branch
+  push:
+    branches:
+      - master
+
+
+# only keep latest run of this workflow
+concurrency:
+  group: remove-dependabot
+  cancel-in-progress: true
+
+jobs:
+  remove-dependabot:
+    # if repo is template, don't run this workflow
+    if: github.event.repository.name != 'latex-template-ja'
+
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    steps:
+      # get main branch repo contents
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # remove files not needed for user instance of template
+      - name: Remove unneeded files
+        run: rm -f .github/dependabot.yml .github/workflows/test.yml .github/workflows/remove_depbot.yml README.md
+
+      # create blank README.md
+      - name: Create blank README.md
+        run: echo -e "# README for your project \n\nThis is a blank README file. You can add your project description here." > README.md
+
+      # save changed files
+      - name: Commit changed files
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "Remove Dependabot"
+          branch: master
