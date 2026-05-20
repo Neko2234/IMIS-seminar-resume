@@ -23,7 +23,7 @@
 % \documentclass[twoside,twocolumn,a4j]{ltjarticle}
 %---
 % pdflatexを使う場合
-\documentclass[uplatex,ja=standard,twoside,twocolumn,a4j,dvipdfmx]{bxjsarticle}
+\documentclass[uplatex,ja=standard,oneside,twocolumn,a4j,dvipdfmx]{bxjsarticle}
 
 %% packages
 % 工学システム学類
@@ -32,7 +32,7 @@
 \usepackage{graphicx}
 % 用紙マージン
 \usepackage{geometry}
-\geometry{top=35truemm,bottom=30truemm,left=35truemm,right=20truemm}
+\geometry{top=25truemm,bottom=25truemm,left=25truemm,right=25truemm}
 %
 \usepackage{latexsym}
 \usepackage{amsmath, mathtools} % 数式用
@@ -56,9 +56,7 @@
 % 代わりに大文字のローマ字で自分の名字を例にならって書いて
 % 下さい．
 %
-\pagestyle{myheadings}
-%\markboth{\it 000000 KOSHISU}{\it 000000 KOUSHISU}
-\esysid{202111747 MIZUTANI}
+\pagestyle{plain}
 
 %
 % 題目を書いて下さい
@@ -87,10 +85,11 @@
 \begin{document}
 
 \maketitle
-\thispagestyle{headings}
+\thispagestyle{plain}
 
-% % 序論
-% \input{MainText/Introduction.tex}
+
+% 序論
+\input{sections/Introduction.tex}
 % % 関連研究
 % \input{MainText/RelatedWorks.tex}
 % % ロボットシステム
@@ -103,9 +102,6 @@
 % \input{MainText/Conclusion.tex}
 % % 謝辞
 % \input{MainText/Acknowledgement.tex}
-
-% 例--消してね-- %
-% \input{exapmle.tex}
 
 % 参考文献
 \bibliography{references} %author.bibから拡張子を外した名前
