@@ -1,22 +1,114 @@
-\documentclass{classes/report}
+
+%% 工学システム学類 20xx年度のスタイルファイルです．
+
+%%
+%%  platex2e用 (TeX Live 2019 で使えます)
+%%  (Overleaf / compiler = pdflatex でも使えます)
+%%
+% このファイルは，筑波大学工学システム学類の卒業研究論文本体の
+% 例を作成するために作ったものです．このファイルを書き換えて，
+% この例と同じような書式の卒業論文本体をLaTeXを使って作成する
+% ことができます．
+% document class はどれか一つを選んで%を外してください
+
+%% document class 
+%---
+% platexを使う場合
+%\documentclass[twoside,twocolumn,a4j,dvipdfmx]{jarticle}
+%---
+% uplatexを使う場合
+%\documentclass[twoside,twocolumn,a4j,dvipdfmx]{ujarticle}
+%---
+% lualatexを使う場合
+% \documentclass[twoside,twocolumn,a4j]{ltjarticle}
+%---
+% pdflatexを使う場合
+\documentclass[uplatex,ja=standard,twoside,twocolumn,a4j,dvipdfmx]{bxjsarticle}
+
+%% packages
+% 工学システム学類
+\usepackage{esys-thesis}
+% 図のファイルを貼り付けるためのパッケージ．
+\usepackage{graphicx}
+% 用紙マージン
+\usepackage{geometry}
+\geometry{top=35truemm,bottom=30truemm,left=35truemm,right=20truemm}
+%
+\usepackage{latexsym}
+\usepackage{amsmath, mathtools} % 数式用
+
+\usepackage{bm} % ベクトル表記用
+\usepackage{siunitx} % 単位用
+
+% 図を並べて表示用
+\usepackage[hang,small,bf]{caption}
+\usepackage[subrefformat=parens]{subcaption}
+\captionsetup{compatibility=false}
+% 図の罫線を太く
+\usepackage{array}
+% サブキャプションの参照にかっこをつける
+\captionsetup[subfigure]{labelformat=simple}
+\renewcommand{\thesubfigure}{(\alph{subfigure})}
+
+%%%%%% ここから論文内容 %%%%%%
+%
+% 次の行には，000000の代わりに自分の学籍番号を，KOUSHISUの
+% 代わりに大文字のローマ字で自分の名字を例にならって書いて
+% 下さい．
+%
+\pagestyle{myheadings}
+%\markboth{\it 000000 KOSHISU}{\it 000000 KOUSHISU}
+\esysid{202111747 MIZUTANI}
+
+%
+% 題目を書いて下さい
+%
+\title{{\Large ロボットの模倣学習における} \\ {\Large 位置制約付き自律動作のためのポテンシャル場 \\} {\large Potential Fields for Position-Constrained Autonomous Motion} \\ {\large in Robotic Imitation Learning}}
+%
+% 著者名，著者名のローマ字表記，指導教員名を例にならって書い
+% て下さい
+%
+\author{{\Large 水谷 圭 } \\ MIZUTANI Kei \\ (指導教員  境野 翔)}
+
+%
+% 卒業論文の概要を書いて下さい
+% 本体が日本語なら概要は英語
+% If the mainbody is in English, abstract should be in Japanese
+%
+\eabstract{%
+    The use of bilateral teleoperation has enabled imitation learning with force control.
+    However, when an obstacle appears on the motion path, imitation learning fails to avoid it due to the lack of an obstacle avoidance algorithm.
+    In such cases, it becomes necessary to reacquire data and repeat the entire learning process whenever the environment changes.
+    In this study, a potential field is applied to an environment with obstacles that were not present during the learning phase. A virtual force is applied to the robot's input during autonomous motion to alter its trajectory, thereby enabling the robot to avoid obstacles without requiring additional data.
+    However, learning models with recursive structures may exhibit unexpected behaviors due to their non-Markovian nature. To address this issue, we explore the possibility of achieving adaptive behavior to potential fields by employing a hierarchical model in which the lower layers ensure Markov properties.
+    Following imitation learning using bilateral control, we validate whether adaptive behavior to environmental changes is feasible by applying a potential field during autonomous behavior in pick-and-place tasks. Furthermore, we evaluate the effectiveness of the proposed hierarchical learning model by comparing it with a non-hierarchical model composed solely of long short-term memory (LSTM).
+}
 
 \begin{document}
 
-\pagenumbering{roman}
-\subfile{sections/title}
-\newpage
+\maketitle
+\thispagestyle{headings}
 
-\tableofcontents
-\clearpage
+% % 序論
+% \input{MainText/Introduction.tex}
+% % 関連研究
+% \input{MainText/RelatedWorks.tex}
+% % ロボットシステム
+% \input{MainText/RobotSystem.tex}
+% % 提案手法
+% \input{MainText/ProposedMethod.tex}
+% % 実験
+% \input{MainText/Experiment.tex}
+% % 結論
+% \input{MainText/Conclusion.tex}
+% % 謝辞
+% \input{MainText/Acknowledgement.tex}
 
-\pagenumbering{arabic}
+% 例--消してね-- %
+% \input{exapmle.tex}
 
-\subfile{sections/abstract}
-\newpage
-
-\subfile{sections/main_issue}
-\newpage
-
-\subfile{sections/references}
+% 参考文献
+\bibliography{references} %author.bibから拡張子を外した名前
+\bibliographystyle{junsrt} %参考文献出力スタイル
 
 \end{document}
