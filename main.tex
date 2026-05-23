@@ -61,7 +61,7 @@
 %
 % 題目を書いて下さい
 %
-\title{{\Large ロボットの模倣学習における} \\ {\Large 位置制約付き自律動作のためのポテンシャル場 \\} {\large Potential Fields for Position-Constrained Autonomous Motion} \\ {\large in Robotic Imitation Learning}}
+\title{{\Large 制御可能な動作生成のための条件付き残差学習} \\ {\large Conditional Residual Learning for Controllable Motion Generation}}
 %
 % 著者名，著者名のローマ字表記，指導教員名を例にならって書い
 % て下さい
@@ -74,12 +74,14 @@
 % If the mainbody is in English, abstract should be in Japanese
 %
 \eabstract{%
-    The use of bilateral teleoperation has enabled imitation learning with force control.
-    However, when an obstacle appears on the motion path, imitation learning fails to avoid it due to the lack of an obstacle avoidance algorithm.
-    In such cases, it becomes necessary to reacquire data and repeat the entire learning process whenever the environment changes.
-    In this study, a potential field is applied to an environment with obstacles that were not present during the learning phase. A virtual force is applied to the robot's input during autonomous motion to alter its trajectory, thereby enabling the robot to avoid obstacles without requiring additional data.
-    However, learning models with recursive structures may exhibit unexpected behaviors due to their non-Markovian nature. To address this issue, we explore the possibility of achieving adaptive behavior to potential fields by employing a hierarchical model in which the lower layers ensure Markov properties.
-    Following imitation learning using bilateral control, we validate whether adaptive behavior to environmental changes is feasible by applying a potential field during autonomous behavior in pick-and-place tasks. Furthermore, we evaluate the effectiveness of the proposed hierarchical learning model by comparing it with a non-hierarchical model composed solely of long short-term memory (LSTM).
+    Bilateral control-based imitation learning (BCIL) enables high-quality robot demonstrations that include both position and force information.
+    However, when task conditions change---such as variations in object size, material, or target placement---new demonstrations must be collected and the model must be retrained from scratch.
+    This paper proposes a framework for post-correcting robot trajectories using a residual neural network (residual NN), which predicts only the deviation from a base trajectory conditioned on a user-specified numerical label.
+    Our central hypothesis is that predicting residuals rather than absolute trajectories yields a stronger monotone relationship between the label and the resulting motion, a property required for stable convergence via iterative learning control (ILC).
+    To test this hypothesis, we conduct a preliminary experiment on a pick-and-place task using a four-channel bilateral control system.
+    Three models are compared: a direct prediction model (\texttt{direct}), a residual prediction model (\texttt{res}), and a lightweight image-free residual model (\texttt{res\_nonImage}).
+    Results show that \texttt{res} achieves $R^2 \approx 0.87$ and Spearman $\rho \approx 0.94$, supporting the hypothesis.
+    At the same time, systematic bias at label $\mathbf{c} = [0,0]$ and unintended orientation changes are identified as remaining challenges.
 }
 
 \begin{document}
@@ -90,18 +92,16 @@
 
 % 序論
 \input{sections/Introduction.tex}
-% % 関連研究
-% \input{MainText/RelatedWorks.tex}
-% % ロボットシステム
-% \input{MainText/RobotSystem.tex}
-% % 提案手法
-% \input{MainText/ProposedMethod.tex}
-% % 実験
-% \input{MainText/Experiment.tex}
-% % 結論
-% \input{MainText/Conclusion.tex}
-% % 謝辞
-% \input{MainText/Acknowledgement.tex}
+% 関連研究
+\input{sections/RelatedWorks.tex}
+% 提案手法
+\input{sections/ProposedMethod.tex}
+% 予備実験
+\input{sections/Experiment.tex}
+% 実験結果と考察
+\input{sections/Results.tex}
+% まとめ
+\input{sections/Conclusion.tex}
 
 % 参考文献
 \bibliography{references} %author.bibから拡張子を外した名前
