@@ -1,0 +1,108 @@
+\section{実験結果と考察}
+\label{sec:results}
+
+\subsection{ラベル追従性（単調増加性の検証）}
+
+各モデルについて，ラベルと実際のプレース変位の相関を表\,\ref{tab:monotone} に示す．
+また，ラベル $\mathit{c}_x$ と実変位 $\Delta x$ の関係を\figref{fig:scatter}に示す．
+
+\begin{table}[t]
+  \centering
+  \caption{ラベル追従性}
+  \label{tab:monotone}
+  \small
+  \begin{tabular}{lcccc}
+    \hline
+    モデル & $R^2$（$X$） & $R^2$（$Y$） & $\rho$（$X$） & $\rho$（$Y$） \\
+    \hline
+    \texttt{direct}       & $\approx 0.50$ & $\approx 0.50$ & $\approx 0.65$ & $\approx 0.65$ \\
+    \texttt{res}          & $\approx 0.87$ & $\approx 0.87$ & $\approx 0.94$ & $\approx 0.94$ \\
+    \texttt{res\_nonImage}& $\approx 0.77$ & $\approx 0.77$ & $\approx 0.88$ & $\approx 0.88$ \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\texttt{res} は $\rho \approx 0.94$，$R^2 \approx 0.87$ と高い単調増加性を示した．
+これは\ref{sec:method}節の仮説，すなわち ``残差予測によって単調増加性が強まる'' ことを実験的に支持する結果である．
+\texttt{res\_nonImage} も $\rho \approx 0.88$ と十分高い追従性を示しており，画像なし軽量モデルでも有効であることが確認された．
+一方，\texttt{direct} はラベルとの相関が低く（$R^2 \approx 0.50$），残差予測の枠組みが単調増加性の実現に重要であることを示している．
+クロス軸方向（$\mathit{c}_x$ から $\Delta y$ など）の $R^2$ は全モデルで低く，軸間の干渉は小さい．
+
+\subsection{ラベル $\boldsymbol{c} = [0,0]$ 時の系統バイアス}
+
+ベース動作データの基準プレース位置（$x = 280.1\,\text{mm}$，$y = -12.2\,\text{mm}$）からのオフセットを表\,\ref{tab:bias} に示す．
+各モデルの $\boldsymbol{c} = [0,0]$ 時のプレース位置分布を\figref{fig:bias}に示す．
+
+\begin{table}[t]
+  \centering
+  \caption{$\boldsymbol{c}=[0,0]$ 時のプレース位置オフセット}
+  \label{tab:bias}
+  \small
+  \begin{tabular}{lrrr}
+    \hline
+    モデル & $n$ & bias$_{XY}$ [mm] & $\sigma_{XY}$ [mm] \\
+    \hline
+    \texttt{motion\_copy} & 5 & $\approx 2.3$ & $\approx 0.4$ \\
+    \texttt{direct}       & 5 & $\approx 8.6$ & $\approx 11.3$ \\
+    \texttt{res}          & 5 & $\approx 18.6$ & $\approx 1.2$ \\
+    \texttt{res\_nonImage}& 5 & $\approx 15.1$ & $\approx 0.8$ \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\texttt{res}・\texttt{res\_nonImage} はいずれも 15〜19\,mm の系統的なオフセットが生じており，
+モデルが ``残差ゼロ'' を正確に学習できていないことを示している．
+試行間ばらつきは小さい（$\sigma \approx 1\,\text{mm}$）ため，
+このバイアスはランダムノイズではなく，学習データの分布に起因する系統的誤差と考えられる．
+ILC によって反復的にバイアスを吸収できる可能性はあるが，実験的な検証は今後の課題である．
+\texttt{direct} はバイアスが小さいが，試行間ばらつきが $\sigma \approx 11\,\text{mm}$ と非常に大きく，安定性が低い．
+
+\subsection{試行間再現性と分散の分解}
+
+同一ラベル内の試行間分散を，ハードウェア由来（モーションコピーから推定）とモデル由来に分解した結果，
+\textbf{分散の 87〜98\% はモデルの推論ばらつきによるもの}であることが確認された（表\,\ref{tab:variance}）．
+ハードウェアの再現精度（$\sigma \approx 0.3\,\text{mm}$）は十分高く，再現性のボトルネックではない．
+\texttt{res\_nonImage} は \texttt{res} と比べて試行間ばらつきが大幅に小さく（$\approx 3\,\text{mm} \to \approx 1\,\text{mm}$），
+照明・視点の微小変動による画像特徴量のばらつきが \texttt{res} の推論ノイズを増大させていたと考えられる．
+
+\begin{table}[t]
+  \centering
+  \caption{試行間分散の分解}
+  \label{tab:variance}
+  \small
+  \begin{tabular}{lcc}
+    \hline
+    モデル & $\sigma_\text{within}$ [mm] & モデル由来比率 \\
+    \hline
+    \texttt{res}          & $\approx 3$〜$4$ & $\approx 98\%$ \\
+    \texttt{res\_nonImage}& $\approx 1$      & $\approx 87\%$ \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\subsection{手先姿勢への影響}
+
+プレース・ピック時の手先姿勢偏差を SO(3) 上の geodesic 距離（角度距離）で評価した（表\,\ref{tab:pose}，\figref{fig:pose}）．
+
+\begin{table}[t]
+  \centering
+  \caption{手先姿勢偏差と $\mathit{c}_x$ との相関}
+  \label{tab:pose}
+  \small
+  \begin{tabular}{lcc}
+    \hline
+    モデル & mean$_\text{geo}$ [deg] & $\rho_{c_x}$（ピック時）\\
+    \hline
+    \texttt{motion\_copy} & $\approx 0.4$〜$1.3$ & $\approx 0$ \\
+    \texttt{direct}       & $\approx 5$〜$9$    & 弱い相関 \\
+    \texttt{res}          & $\approx 5$〜$9$    & $\approx -0.47$ \\
+    \texttt{res\_nonImage}& $\approx 5$〜$9$    & 弱い相関 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+全モデルでモーションコピー基準（$\approx 1^\circ$）より大きな姿勢偏差（$5$〜$9^\circ$）が生じており，
+意図した向きと異なる姿勢でプレースされている可能性がある．
+特に \texttt{res} ではピック時の geodesic 偏差と $\mathit{c}_x$ の間に $\rho \approx -0.47$ の相関が見られ，
+\textbf{残差予測がプレース位置の変位だけでなく姿勢変化も学習してしまっている}ことを示唆している．
+\texttt{res\_nonImage} ではこの相関が見られないことから，画像特徴量が姿勢干渉を媒介している可能性がある．
