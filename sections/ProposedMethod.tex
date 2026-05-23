@@ -1,0 +1,67 @@
+\section{提案手法}
+\label{sec:method}
+
+\subsection{基本コンセプトと仮説}
+
+本研究は，数値ラベル $\boldsymbol{c}$（目標値と現在の出力値の差分）を指定することで，
+ベース動作データ $\xi_\text{base}$ から所望の変位だけずれた動作をロボットに自律実行させることを目的とする．
+ここで「動作データ」とは，位置・速度・トルクを含む関節状態の時系列 $\xi \in \mathbb{R}^{T \times D}$ を指す．
+
+提案フレームワークでは，ILC によってラベルと実際の出力値を反復的に収束させることを想定している．
+このとき，ラベル $\boldsymbol{c}$ を変化させると実行結果 $v(\xi)$ が単調増加的に追従することが，ILC 収束の前提条件となる．
+
+本研究の仮説は，\textbf{動作データ全体 $\xi$ を直接予測するより，ベース動作データからの差分（残差）$\Delta\xi$ だけを予測する方が，ラベルと出力変位の間の線形性・単調増加性が強まる}，というものである．
+ベース動作データ $\xi_\text{base}$ という固定のアンカーが存在することで，NNが学習すべき変化量は小さくなり，ラベルと出力の対応関係がシンプルになると考えられる．
+この仮説が成立することを，本論文の予備実験で検証する．
+
+提案フレームワークは次の三段構成をとる．
+\begin{enumerate}
+  \item \textbf{残差データの収集}：Motion Retouch \cite{Inami2025} を用いて，ベース動作データに対する修正後動作データを収録し，教師残差 $\Delta\xi^{(k)} = \xi^{(k)}_\text{corr} - \xi_\text{base}$ を得る．
+  \item \textbf{残差NNの学習}：ラベル $\boldsymbol{c}$ を条件として，観測から $\Delta\xi$ を予測する残差NNを学習する．
+  \item \textbf{ILCによる反復収束}：学習済みNNを用いてロボットを実行し，出力誤差をラベルに反映させる更新則を反復することで，目標値への収束を実現する．
+\end{enumerate}
+
+\subsection{問題設定}
+
+記号を表\,\ref{tab:notation} に定義する．
+ラベルは目標値と現在の出力値の差分として定義する：
+\begin{equation}
+  \boldsymbol{c} = v^* - v(\xi_\text{base}),
+  \label{eq:label}
+\end{equation}
+ここで $v(\xi)$ は動作データ $\xi$ を実行したときの評価量（プレース位置，最終トルクなど），$v^*$ は目標値である．
+
+\begin{table}[t]
+  \centering
+  \caption{記号定義}
+  \label{tab:notation}
+  \small
+  \begin{tabular}{ll}
+    \hline
+    記号 & 定義 \\
+    \hline
+    $\xi_\text{base} \in \mathbb{R}^{T \times D}$ & ベース動作データ \\
+    $\xi^{(k)}_\text{corr}$ & ラベル $k$ に対応するRetouch修正後動作データ \\
+    $\Delta\xi^{(k)}$ & 教師残差 $= \xi^{(k)}_\text{corr} - \xi_\text{base}$ \\
+    $\boldsymbol{c} \in \mathbb{R}^m$ & 試行レベルのラベル（目標値との差分） \\
+    $v(\xi)$ & 動作データ $\xi$ に対する評価量 \\
+    $v^*$ & 目標値 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\subsection{モデルアーキテクチャ}
+
+本研究では，Transformerデコーダに基づく模倣学習モデルを用いる．
+入力は過去 $L$ ステップのフォロワアームの関節状態系列
+（各ステップで角度・角速度・トルクを結合した $d_a$ 次元ベクトル），現在時刻のカメラ画像，および数値ラベル $\boldsymbol{c}$ である．
+出力は将来 $L$ ステップの関節状態系列 $\hat{\boldsymbol{y}} \in \mathbb{R}^{L \times d_a}$ である．
+
+状態系列は線形層と正弦波位置エンコーディングによりトークン化し，Transformerデコーダのクエリとして用いる．
+画像は固定重みの ResNet-50 で特徴マップを抽出し，Transformerエンコーダを経てメモリトークン列に変換する．
+画像を使用しない場合は，学習可能なメモリトークン列をそのままキー・バリューとして用いる．
+数値ラベル $\boldsymbol{c}$ は状態系列と結合して入力する．
+学習は予測と教師信号のMSE損失で行う．
+
+推論時にはACT \cite{Zhao2023ACT} に倣ったTemporal Ensembleを適用し，
+ローリングバッファに蓄積した予測の平均によって推論ノイズを低減する．

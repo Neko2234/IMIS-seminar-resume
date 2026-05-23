@@ -77,7 +77,7 @@
     Bilateral control-based imitation learning (BCIL) enables high-quality robot demonstrations that include both position and force information.
     However, when task conditions change---such as variations in object size, material, or desired placement---new demonstrations must be collected and the model must be retrained from scratch.
     This paper proposes a framework in which a user specifies a numerical label $\boldsymbol{c}$ (the difference between the target and current output) and the robot autonomously executes a trajectory that deviates from a base trajectory by the desired displacement, without any retraining.
-    Our central hypothesis is that predicting only the residual $\Delta\tau$ between the corrected and base trajectories, rather than the full trajectory, yields a stronger linear and monotone relationship between the label and the resulting motion---a property required for stable convergence via iterative learning control (ILC).
+    Our central hypothesis is that predicting only the residual $\Delta\xi$ between the corrected and base trajectories, rather than the full trajectory, yields a stronger linear and monotone relationship between the label and the resulting motion---a property required for stable convergence via iterative learning control (ILC).
     Training data for the residual neural network (NN) are collected efficiently using Motion ReTouch, a post-editing technology based on four-channel bilateral control.
     To test this hypothesis, we conduct a preliminary experiment on a pick-and-place task.
     Three models are compared: a direct prediction model (\texttt{direct}), a residual prediction model (\texttt{res}), and a lightweight image-free residual model (\texttt{res\_nonImage}).
