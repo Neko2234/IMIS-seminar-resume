@@ -1,0 +1,53 @@
+\section{研究背景と問題設定}
+
+\subsection{バイラテラル制御に基づく模倣学習（BCIL）}
+
+四チャンネルバイラテラル制御を用いた模倣学習（BCIL）は，
+デモンストレーションデータとして\textbf{位置と力の両方を含む}高品質な軌道を収集できる点で，
+視覚ベースの行動クローニングに対して優位性を持つ．
+Bi-ACT \cite{Buamanee2024} はTransformerアーキテクチャを採用し，高い汎化性能を実現している．
+
+\subsection{条件変化への対応コスト}
+
+実運用ではタスク条件の変化が頻発するが，既存のBCILには以下の問題がある：
+\begin{itemize}
+  \item タスク条件が変わるたびに新規デモ収録と再学習が必要
+  \item 「プレース位置を5\,mm右にする」等の\textbf{定量的な数値指定}ができない
+  \item 数値目標への収束を保証する機構がない
+\end{itemize}
+
+\subsection{研究の問い}
+
+\begin{center}
+  \fboxsep=5pt
+  \fbox{\parbox{0.9\linewidth}{\small
+    ベース軌道に対する\textbf{差分（残差）だけを予測するモデル}を学習すれば，
+    ラベルと出力の間の\textbf{線形性・単調増加性}が強まり，
+    少量データかつ再学習なしで定量的なラベル制御が実現できるのではないか？
+  }}
+\end{center}
+
+\subsection{既存手法との比較}
+
+\begin{table*}[tp]
+  \centering
+  \caption{既存手法と提案手法の比較}
+  \begin{tblr}{
+    width=\textwidth,
+    colspec={X[2,l] c c c c},
+    row{1}={font=\bfseries},
+  }
+    \toprule
+    手法 & 位置＋力 & 定量数値ラベル & 再学習不要 & オンライン介入不要 \\
+    \midrule
+    Bi-ACT（標準BCIL）\cite{Buamanee2024}    & $\checkmark$ & $\times$         & $\times$     & $\checkmark$ \\
+    Bi-LAT（言語条件付き）\cite{Kobayashi2025BiLAT} & $\checkmark$ & $\times$（定性） & $\triangle$  & $\checkmark$ \\
+    Goal-conditioned IL \cite{Ding2019}      & $\times$     & $\triangle$      & $\times$     & $\checkmark$ \\
+    残差RL \cite{Johannink2019}              & $\times$     & $\times$         & $\checkmark$ & $\times$     \\
+    TER-DAgger等 \cite{Huang2025TERDAgger}   & $\checkmark$ & $\times$         & $\checkmark$ & $\times$     \\
+    \textbf{提案手法}                        & $\checkmark$ & $\checkmark$     & $\checkmark$ & $\checkmark$ \\
+    \bottomrule
+  \end{tblr}
+\end{table*}
+
+\noindent\textbf{→「定量数値ラベルによる位置＋力の軌道生成を，少量オフラインデータかつ再学習なしで実現する」手法は既存研究に存在しない．}

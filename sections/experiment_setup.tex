@@ -1,0 +1,53 @@
+\section{予備実験の設定}
+
+\subsection{タスク}
+
+\textbf{四角い積み木のピックアンドプレース}：ロボットアームが積み木を掴み，
+ラベル $[l_x,\,l_y]$（各軸の移動量）に対応した位置に置く．
+
+\figph{実験タスクの概要図（9箇所のプレース位置と移動量ラベルの対応）}
+
+\subsection{学習データの収集手順}
+
+\begin{enumerate}
+  \item ベース動作（「掴んだ積み木をそのまま置く」）を収録
+  \item Motion Retouch により，プレース位置を左右・上下に9箇所ずらす修正を各5回適用（計45本）
+  \item ラベル $[l_x,\,l_y]$（各軸の移動量）を付与
+\end{enumerate}
+
+これにより，\textbf{プレース位置指定データ}と\textbf{ベース軌道に対する残差データ}の両方を取得している．
+
+\subsection{検証モデル}
+
+\begin{table*}[tp]
+  \centering
+  \caption{検証した3モデルの比較}
+  \begin{tblr}{
+    width=\textwidth,
+    colspec={l X[2] X[2] X},
+    row{1}={font=\bfseries},
+  }
+    \toprule
+    モデル名 & 入力 & 出力 & 特徴 \\
+    \midrule
+    \texttt{direct}        & 関節状態・画像・ラベル & 次ステップ関節状態（絶対値） & 全関節をNNが予測 \\
+    \texttt{res}           & 関節状態・画像・ラベル & 次ステップのベース動作への残差 & モーションコピー＋残差予測 \\
+    \texttt{res\_nonImage} & 関節状態・ラベル（画像なし） & 同上 & \texttt{res} の軽量版 \\
+    \bottomrule
+  \end{tblr}
+\end{table*}
+
+モーションコピー単体（\texttt{motion\_copy}）はハードウェア再現精度の基準として使用．
+
+\subsection{検証条件と評価指標}
+
+\textbf{検証ラベル}：$\pm3,\,\pm5,\,\pm7$ の組み合わせ，計27種類 $\times$ 各5試行
+（掴み不可ラベルは除外：試行数 \texttt{direct} 105，\texttt{res\_nonImage} 116，\texttt{res} 126）
+
+\textbf{評価指標}：
+\begin{itemize}
+  \item ラベルと実変位の相関：決定係数 $R^2$，Spearman 順位相関 $\rho$
+  \item $c=[0,0]$ 指定時の系統バイアス（mean, std）
+  \item 試行間再現性 $\sigma$ と分散の分解（ハードウェア由来 vs. モデル由来）
+  \item 手先姿勢偏差：geodesic 距離 $\theta = \arccos\!\left(\frac{\mathrm{tr}(R_\mathrm{ref}^\top R)-1}{2}\right)$
+\end{itemize}

@@ -1,0 +1,56 @@
+\section{実験結果①：ラベル追従性と系統バイアス}
+
+\subsection{ラベル追従性（単調増加性の検証）}
+
+\begin{table*}[tp]
+  \centering
+  \caption{ラベルと実変位の相関係数（全試行）}
+  \begin{tblr}{
+    width=\textwidth,
+    colspec={l c c c c},
+    row{1}={font=\bfseries},
+  }
+    \toprule
+    モデル & $R^2$（X軸） & $R^2$（Y軸） & Spearman $\rho$（X） & Spearman $\rho$（Y） \\
+    \midrule
+    \texttt{direct}        & $\approx 0.50$ & $\approx 0.50$ & $\approx 0.65$ & $\approx 0.65$ \\
+    \texttt{res}           & $\approx 0.87$ & $\approx 0.87$ & $\approx 0.94$ & $\approx 0.94$ \\
+    \texttt{res\_nonImage} & $\approx 0.77$ & $\approx 0.77$ & $\approx 0.88$ & $\approx 0.88$ \\
+    \bottomrule
+  \end{tblr}
+\end{table*}
+
+\figph{ラベル vs. 実変位の散布図（左：\texttt{direct}，中：\texttt{res}，右：\texttt{res\_nonImage}）}
+
+\textbf{考察}：
+\begin{itemize}
+  \item \texttt{res} は $\rho\approx0.94$，$R^2\approx0.87$ と高い単調増加性を達成．\textbf{ILCの前提条件を実験的に支持する結果が得られた}
+  \item \texttt{res\_nonImage} も $\rho\approx0.88$ と十分な追従性を示し，画像なし軽量モデルでも有効
+  \item \texttt{direct} は $R^2\approx0.50$ と弱く，\textbf{残差予測の枠組みが単調増加性の実現に不可欠}であることを示唆
+  \item クロス軸（$l_x \to \Delta y$ 等）の $R^2$ は全モデルで低く，軸間干渉は小さい
+\end{itemize}
+
+\subsection{$c=[0,0]$ 時の系統バイアス}
+
+ラベル $[0,0]$ 指定時のプレース位置と基準点（$x=280.1$\,mm，$y=-12.2$\,mm）からのオフセット：
+
+\begin{table}[H]
+  \centering
+  \caption{$c=[0,0]$ 指定時の位置バイアス（$n=5$）}
+  \begin{tblr}{
+    colspec={l r r},
+    row{1}={font=\bfseries},
+  }
+    \toprule
+    モデル & $\mathrm{bias}_{XY}$ [mm] & $\sigma_{XY}$ [mm] \\
+    \midrule
+    \texttt{motion\_copy}（HW上限） & $\approx 2.3$           & $\approx 0.4$  \\
+    \texttt{direct}                 & $\approx 8.6$           & $\approx 11.3$ \\
+    \texttt{res}                    & $\approx \mathbf{18.6}$ & $\approx 1.2$  \\
+    \texttt{res\_nonImage}          & $\approx \mathbf{15.1}$ & $\approx 0.8$  \\
+    \bottomrule
+  \end{tblr}
+\end{table}
+
+\textbf{考察}：\texttt{res}・\texttt{res\_nonImage} ともに $c=[0,0]$ でも 15〜19\,mm の系統的なオフセットが生じている
+（モデルが「残差ゼロ」を正確に学習できていない）．ILCによる収束にはこのバイアスの吸収・補正が必要である．

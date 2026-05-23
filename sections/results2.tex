@@ -1,0 +1,64 @@
+\section{実験結果②：試行間再現性と手先姿勢偏差}
+
+\subsection{試行間再現性と分散の分解}
+
+同一ラベル内の試行間分散を以下の独立性仮定のもとで分解した：
+\[
+  \sigma^2_\mathrm{total} = \sigma^2_\mathrm{copy} + \sigma^2_\mathrm{model},
+  \qquad \sigma^2_\mathrm{copy} \approx 0.13\,\text{mm}^2 \;(\sigma\approx0.3\,\text{mm})
+\]
+
+\begin{table*}[tp]
+  \centering
+  \caption{試行間分散の分解（ハードウェア由来 vs. モデル由来）}
+  \begin{tblr}{
+    width=\textwidth,
+    colspec={l l c c c c},
+    row{1}={font=\bfseries},
+  }
+    \toprule
+    モデル & 軸 & $\sigma^2_\mathrm{total}$ [mm$^2$] & $\sigma^2_\mathrm{copy}$ [mm$^2$] & モデル由来比率 & Levene $p$ \\
+    \midrule
+    \texttt{res}           & X & $\approx 10$--$16$ & $\approx 0.13$ & $> 98\%$ & $<0.05$ \\
+    \texttt{res}           & Y & $\approx 10$--$16$ & $\approx 0.13$ & $> 98\%$ & $<0.05$ \\
+    \texttt{res\_nonImage} & X & $\approx 1$--$2$   & $\approx 0.13$ & $> 87\%$ & $<0.05$ \\
+    \texttt{res\_nonImage} & Y & $\approx 1$--$2$   & $\approx 0.13$ & $> 87\%$ & $<0.05$ \\
+    \bottomrule
+  \end{tblr}
+\end{table*}
+
+\textbf{考察}：
+\begin{itemize}
+  \item 試行間ばらつきの\textbf{87〜98\%はモデルの推論ばらつき}が原因；ハードウェア（$\sigma\approx0.3$\,mm）はボトルネックではない
+  \item \texttt{res\_nonImage} は画像除去で $\sigma\approx1$\,mm と大幅に安定（\texttt{res} の $\approx3$--4\,mm から改善）→ 画像特徴量のばらつきが推論ノイズを増幅していた可能性
+\end{itemize}
+
+\subsection{手先姿勢偏差（geodesic距離）}
+
+\begin{table*}[tp]
+  \centering
+  \caption{プレース・ピック時の手先姿勢偏差}
+  \begin{tblr}{
+    width=\textwidth,
+    colspec={X[2,l] c c c},
+    row{1}={font=\bfseries},
+  }
+    \toprule
+    モデル & mean\_geo [deg] & std\_geo [deg] & $\rho$（ラベルと姿勢偏差の相関） \\
+    \midrule
+    \texttt{motion\_copy}（基準） & $\approx 0.4$--$1.3$ & 小 & $\approx 0$ \\
+    \texttt{direct}               & $\approx 5$--$9$     & 中 & 低 \\
+    \texttt{res}                  & $\approx 5$--$9$     & 中 & ピック時 $\approx -0.47$ \\
+    \texttt{res\_nonImage}        & $\approx 5$--$9$     & 中 & 低 \\
+    \bottomrule
+  \end{tblr}
+\end{table*}
+
+\figph{ピック時の geodesic 偏差と $l_x$ の散布図（\texttt{res}，$\rho\approx-0.47$）}
+
+\textbf{考察}：
+\begin{itemize}
+  \item 全モデルで基準（$\approx 1^\circ$）より有意に大きな姿勢偏差（$5$--$9^\circ$）が存在；タスク成功率に影響し得る
+  \item \texttt{res} ではピック時の姿勢偏差と $l_x$ の間に $\rho \approx -0.47$ の相関：\textbf{残差予測が位置変位だけでなく姿勢変化も学習してしまっている}（「ラベルで変えたい成分以外も変わる」問題）
+  \item \texttt{res\_nonImage} では相関が見られない $\to$ 画像特徴量が姿勢干渉を媒介している可能性
+\end{itemize}

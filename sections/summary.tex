@@ -1,0 +1,45 @@
+\section{総合評価と今後の課題}
+
+\subsection{3モデル比較まとめ}
+
+\begin{table*}[tp]
+  \centering
+  \caption{3モデルの総合比較}
+  \begin{tblr}{
+    width=\textwidth,
+    colspec={X[2,l] c c c},
+    row{1}={font=\bfseries},
+  }
+    \toprule
+    指標 & \texttt{direct} & \texttt{res} & \texttt{res\_nonImage} \\
+    \midrule
+    ラベル追従性（$R^2$）    & 低（$\approx0.50$）     & \textbf{最高（$\approx0.87$）} & 高（$\approx0.77$）     \\
+    単調増加性（$\rho$）     & 低（$\approx0.65$）     & \textbf{最高（$\approx0.94$）} & 高（$\approx0.88$）     \\
+    試行間再現性（$\sigma$） & 非常に低（$\approx12$\,mm） & 中（$\approx3$--4\,mm） & \textbf{最高（$\approx1$\,mm）} \\
+    $[0,0]$ バイアス         & 中（$\approx9$\,mm）    & 大（$\approx19$\,mm）   & 大（$\approx15$\,mm）   \\
+    姿勢干渉                 & ランダム誤差             & \textbf{ラベルに相関あり} & ランダム誤差           \\
+    \bottomrule
+  \end{tblr}
+\end{table*}
+
+\noindent\textbf{結論}：残差予測の枠組みにより，目標とする単調増加性はある程度実現できることを確認した（\texttt{res}：$\rho\approx0.94$）．
+一方で，以下2点が明確な課題として浮かび上がった．
+
+\subsection{今後の課題と改善方向}
+
+\begin{description}[style=nextline]
+  \item[\textbf{課題① $c=0$ 時の系統バイアス（15〜19\,mm）}]
+    \textit{原因仮説}：学習データの分布がオリジナル動作位置を中心に偏っていない．\\
+    \textit{改善}：損失関数への「残差ゼロ」ペナルティ追加；ILCによる反復補正（理論的には吸収可能）
+
+  \item[\textbf{課題② ラベルが姿勢にも影響（\texttt{res} ピック時 $\rho\approx-0.47$）}]
+    \textit{原因仮説}：残差 $\Delta\tau$ に位置変化と姿勢変化が混在している．\\
+    \textit{改善}：損失関数への姿勢固定制約；補正マスク $\tilde{M}$ を $\mathbb{R}^{T\times1}$ から $\mathbb{R}^{T\times D}$ に拡張して次元別補正を可能にする
+
+  \item[\textbf{次ステップ（フルモデル実装に向けて）}]
+    (1) 双方向Transformerによる一括補正モデルの実装\quad
+    (2) Broyden法ILCループとの統合・系統バイアスの吸収実証\quad
+    (3) 力情報を含む軌道（コネクター挿入，ねじ締め等）への適用
+\end{description}
+
+\printbibliography[title=参考文献]

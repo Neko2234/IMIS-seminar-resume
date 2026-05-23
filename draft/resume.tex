@@ -1,0 +1,343 @@
+%% コンパイル: lualatex resume.tex
+\documentclass[a4paper,10pt]{jlreq}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+
+\geometry{top=18mm, bottom=20mm, left=22mm, right=22mm}
+
+\setlist[itemize]{topsep=2pt, itemsep=1pt, parsep=0pt, leftmargin=1.5em}
+\setlist[enumerate]{topsep=2pt, itemsep=1pt, parsep=0pt, leftmargin=1.5em}
+\setlist[description]{topsep=4pt, itemsep=4pt, parsep=0pt}
+
+%% 図プレースホルダー: \figph[幅]{説明}
+\newcommand{\figph}[2][0.72\linewidth]{%
+  \begin{center}
+    \fboxsep=6pt
+    \fbox{\begin{minipage}{#1}%
+      \centering\vspace{1.4cm}%
+      \textcolor{gray}{\small [図：#2]}%
+      \vspace{1.4cm}%
+    \end{minipage}}
+  \end{center}%
+}
+
+\begin{document}
+
+%% ========== Page 1：研究背景と問題設定 ==========
+\begin{center}
+  {\Large\bfseries 残差NNによる軌道後修正手法の提案と予備実験}\\[5pt]
+  {\normalsize ――位置制御タスクにおける単調増加性の検証――}\\[8pt]
+  {\small 氏名（筑波大学 ○○研究室）\hfill 2026年5月}
+\end{center}
+\hrule\vspace{6pt}
+
+\section{研究背景と問題設定}
+
+\subsection{バイラテラル制御に基づく模倣学習（BCIL）}
+
+四チャンネルバイラテラル制御を用いた模倣学習（BCIL）は，デモンストレーションデータとして\textbf{位置と力の両方を含む}高品質な軌道を収集できる点で，視覚ベースの行動クローニングに対して優位性を持つ．Bi-ACT \cite{Buamanee2024} はTransformerアーキテクチャを採用し，様々な物体操作タスクで高い汎化性能を実現している．
+
+\subsection{条件変化への対応コスト}
+
+実運用ではタスク条件の変化が頻発するが，既存のBCILでは以下の問題がある：
+\begin{itemize}
+  \item タスク条件が変わるたびに新規デモ収録と再学習が必要
+  \item 「プレース位置を5\,mm右にする」等の\textbf{定量的な数値指定}ができない
+  \item 数値目標への収束を保証する機構がない
+\end{itemize}
+
+\subsection{研究の問い}
+
+\begin{center}
+  \fboxsep=6pt
+  \fbox{\parbox{0.9\linewidth}{
+    ベース軌道に対する\textbf{差分（残差）だけを予測するモデル}を学習すれば，ラベルと出力の間の\textbf{線形性・単調増加性}が強まり，少量データかつ再学習なしで定量的なラベル制御が実現できるのではないか？
+  }}
+\end{center}
+
+\subsection{既存手法との比較}
+
+\begin{table}[h]
+  \centering\small
+  \caption{既存手法と提案手法の比較}
+  \begin{tabularx}{\linewidth}{Xcccc}
+    \toprule
+    手法 & 位置＋力 & 定量数値ラベル & 再学習不要 & オンライン介入不要 \\
+    \midrule
+    Bi-ACT（標準BCIL）   & $\checkmark$ & $\times$         & $\times$         & $\checkmark$ \\
+    Bi-LAT（言語条件付き） & $\checkmark$ & $\times$（定性）  & $\triangle$      & $\checkmark$ \\
+    Goal-conditioned IL  & $\times$     & $\triangle$（位置）& $\times$         & $\checkmark$ \\
+    残差RL               & $\times$     & $\times$         & $\checkmark$     & $\times$     \\
+    TER-DAgger 等        & $\checkmark$ & $\times$         & $\checkmark$     & $\times$     \\
+    \textbf{提案手法}    & $\checkmark$ & $\checkmark$     & $\checkmark$     & $\checkmark$ \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\noindent\textbf{→「定量数値ラベルによる位置＋力の軌道生成を，少量オフラインデータかつ再学習なしで実現する」手法は既存研究に存在しない．}
+
+\clearpage
+
+%% ========== Page 2：提案手法の概要 ==========
+\section{提案手法の概要と予備実験の位置付け}
+
+\subsection{基本コンセプト}
+
+\begin{center}
+  \textbf{「数値ラベルを指定するだけで，ベース軌道から所望の量だけ変化した軌道を生成し，ロボットを自律動作させる」}
+\end{center}
+
+\figph[0.88\linewidth]{提案手法の全体フロー（Motion Retouch によるデータ収集 → 残差NN学習 → ILCによる反復収束）}
+
+\subsection{三段構成}
+
+\begin{enumerate}
+  \item \textbf{Motion Retouch によるデータ収集}：ベース軌道に対してプレース位置等を修正した軌道を複数収録し，残差 $\Delta\tau^{(k)} = \tau^{(k)}_\mathrm{corr} - \tau_\mathrm{base}$ とラベル $c$ のペアを得る（数十本で十分）
+  \item \textbf{残差NNの学習}：フル軌道 $\tau_\mathrm{base}$ とラベル $c$ を入力として補正量 $\Delta\tilde{\tau}$ を一括予測する双方向Transformer
+  \item \textbf{局所線形化ILC}：Broyden法でヤコビアン $J$ を逐次推定しながらラベルを更新し，目標値 $v^*$ への収束を保証
+\end{enumerate}
+
+$$c^{(k+1)} = c^{(k)} + \gamma \bigl(J^{(k)}\bigr)^\dagger e^{(k)}, \qquad e^{(k)} = v^* - v\!\left(\tau^{(k+1)}\right)$$
+
+\subsection{中核にある仮説}
+
+軌道全体を直接予測するより，ベース軌道からの\textbf{差分だけを予測する}方が，ラベルと出力変位の間の\textbf{線形性・単調増加性が強まる}．これが成立すれば，ILCによる安定した数値収束が可能になる．
+
+\subsection{今回の予備実験の位置付け}
+
+完全なシステム（双方向Transformer + ILC）の実装に先立ち，\textbf{残差NNが単調増加性を実際に持てるかどうか}を，シンプルな自己回帰モデルを用いた実機実験で検証する．
+
+\begin{center}
+  \fboxsep=5pt
+  \fbox{\parbox{0.88\linewidth}{
+    \textbf{検証仮説}：ラベル $[l_x,\,l_y]$ を変化させると，実際のプレース変位がそれに追従して単調に変化する（ILCが収束するための前提条件）
+  }}
+\end{center}
+
+\clearpage
+
+%% ========== Page 3：実験設定 ==========
+\section{予備実験の設定}
+
+\subsection{タスク}
+
+\textbf{四角い積み木のピックアンドプレース}：ロボットアームが積み木を掴み，ラベル $[l_x,\,l_y]$（各軸の移動量，単位 [unit]）に対応した位置に置く．
+
+\figph[0.58\linewidth]{実験タスクの概要図（9箇所のプレース位置と移動量ラベルの対応）}
+
+\subsection{学習データの収集手順}
+
+\begin{enumerate}
+  \item ベース動作（「掴んだ積み木をそのまま置く」）を収録
+  \item Motion Retouch により，プレース位置を左右・上下方向に9箇所ずらす修正を各5回適用（計45本）
+  \item ラベル $[l_x,\,l_y]$（各軸の移動量）を付与
+\end{enumerate}
+
+これにより，\textbf{プレース位置指定データ}と\textbf{ベース軌道に対する残差データ}の両方を取得している．
+
+\subsection{検証モデル}
+
+\begin{table}[h]
+  \centering\small
+  \caption{検証した3モデルの比較}
+  \begin{tabularx}{\linewidth}{lXXl}
+    \toprule
+    モデル名 & 入力 & 出力 & 特徴 \\
+    \midrule
+    \texttt{direct}        & 関節状態・画像・ラベル  & 次ステップ関節状態（絶対値） & 全関節をNNが予測 \\
+    \texttt{res}           & 関節状態・画像・ラベル  & 次ステップのオリジナル動作への残差 & モーションコピー＋残差予測 \\
+    \texttt{res\_nonImage} & 関節状態・ラベル（画像なし） & 同上 & \texttt{res} の軽量版 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+モーションコピー単体（\texttt{motion\_copy}）はハードウェア再現精度の基準として使用．
+
+\subsection{検証条件と評価指標}
+
+\textbf{検証ラベル}：$\pm3,\,\pm5,\,\pm7$ の組み合わせ，計27種類 $\times$ 各5試行（掴み不可ラベルは除外；試行数：\texttt{direct} 105，\texttt{res\_nonImage} 116，\texttt{res} 126）
+
+\textbf{評価指標}：
+\begin{itemize}
+  \item ラベルと実変位の相関：決定係数 $R^2$，Spearman 順位相関 $\rho$
+  \item $c=[0,0]$ 指定時の系統バイアス（mean, std）
+  \item 試行間再現性（標準偏差 $\sigma$）と分散の分解（ハードウェア由来 vs. モデル由来）
+  \item 手先姿勢偏差：geodesic 距離
+    $\theta = \arccos\!\left(\dfrac{\mathrm{tr}(R_\mathrm{ref}^\top R)-1}{2}\right)\;[\mathrm{deg}]$
+\end{itemize}
+
+\clearpage
+
+%% ========== Page 4：結果①　ラベル追従性・系統バイアス ==========
+\section{実験結果①：ラベル追従性と系統バイアス}
+
+\subsection{ラベル追従性（単調増加性の検証）}
+
+\begin{table}[h]
+  \centering\small
+  \caption{ラベルと実変位の相関係数（全試行）}
+  \begin{tabular}{lcccc}
+    \toprule
+    モデル & $R^2$（X軸） & $R^2$（Y軸） & Spearman $\rho$（X） & Spearman $\rho$（Y） \\
+    \midrule
+    \texttt{direct}        & $\approx 0.50$ & $\approx 0.50$ & $\approx 0.65$ & $\approx 0.65$ \\
+    \texttt{res}           & $\approx 0.87$ & $\approx 0.87$ & $\approx 0.94$ & $\approx 0.94$ \\
+    \texttt{res\_nonImage} & $\approx 0.77$ & $\approx 0.77$ & $\approx 0.88$ & $\approx 0.88$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\figph[0.88\linewidth]{ラベル vs. 実変位の散布図（左：\texttt{direct}，中：\texttt{res}，右：\texttt{res\_nonImage}）}
+
+\textbf{考察}：
+\begin{itemize}
+  \item \textbf{\texttt{res}} は $\rho\approx0.94$，$R^2\approx0.87$ と高い単調増加性を達成．\textbf{ILCの前提条件を実験的に支持する結果が得られた}
+  \item \texttt{res\_nonImage} も $\rho\approx0.88$ と十分な追従性を示し，画像なし軽量モデルでも有効
+  \item \texttt{direct} は $R^2\approx0.50$ と弱く，\textbf{残差予測の枠組みが単調増加性の実現に不可欠}であることを示唆
+  \item クロス軸（$l_x \to \Delta y$ 等）の $R^2$ は全モデルで低く，軸間干渉は小さい
+\end{itemize}
+
+\subsection{$c=[0,0]$ 時の系統バイアス}
+
+ラベル $[0,0]$ 指定時のプレース位置と基準点（$x=280.1$\,mm，$y=-12.2$\,mm）からのオフセット：
+
+\begin{table}[h]
+  \centering\small
+  \caption{$c=[0,0]$ 指定時の位置バイアス（$n=5$）}
+  \begin{tabular}{lrr}
+    \toprule
+    モデル & $\mathrm{bias}_{XY}$ [mm] & $\sigma_{XY}$ [mm] \\
+    \midrule
+    \texttt{motion\_copy}（HW上限） & $\approx 2.3$  & $\approx 0.4$  \\
+    \texttt{direct}                 & $\approx 8.6$  & $\approx 11.3$ \\
+    \texttt{res}                    & $\approx \mathbf{18.6}$ & $\approx 1.2$ \\
+    \texttt{res\_nonImage}          & $\approx \mathbf{15.1}$ & $\approx 0.8$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{考察}：\texttt{res}・\texttt{res\_nonImage} ともに $c=[0,0]$ でも 15〜19\,mm の系統的なオフセットが生じている（モデルが「残差ゼロ」を正確に学習できていない）．ILCによる収束にはこのバイアスの吸収・補正が必要である．
+
+\clearpage
+
+%% ========== Page 5：結果②　再現性・姿勢干渉 ==========
+\section{実験結果②：試行間再現性と手先姿勢偏差}
+
+\subsection{試行間再現性と分散の分解}
+
+同一ラベル内の試行間分散を以下の独立性仮定のもとで分解した：
+\[
+  \sigma^2_\mathrm{total} = \sigma^2_\mathrm{copy} + \sigma^2_\mathrm{model},
+  \qquad \sigma^2_\mathrm{copy} \approx 0.13\,\mathrm{mm}^2 \;(\sigma\approx0.3\,\mathrm{mm})
+\]
+
+\begin{table}[h]
+  \centering\small
+  \caption{試行間分散の分解（ハードウェア由来 vs. モデル由来）}
+  \begin{tabular}{llrrrl}
+    \toprule
+    モデル & 軸 & $\sigma^2_\mathrm{total}$ [mm$^2$] & $\sigma^2_\mathrm{copy}$ [mm$^2$] & モデル由来比率 & Levene $p$ \\
+    \midrule
+    \texttt{res}          & X & $\approx 10$--$16$ & $\approx 0.13$ & $> 98\%$ & $<0.05$ \\
+    \texttt{res}          & Y & $\approx 10$--$16$ & $\approx 0.13$ & $> 98\%$ & $<0.05$ \\
+    \texttt{res\_nonImage}& X & $\approx 1$--$2$   & $\approx 0.13$ & $> 87\%$ & $<0.05$ \\
+    \texttt{res\_nonImage}& Y & $\approx 1$--$2$   & $\approx 0.13$ & $> 87\%$ & $<0.05$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{考察}：
+\begin{itemize}
+  \item 試行間ばらつきの\textbf{87〜98\%はモデルの推論ばらつき}が原因；ハードウェアはボトルネックではない
+  \item \texttt{res\_nonImage} は画像除去で $\sigma\approx1$\,mm と大幅に安定（\texttt{res} の $\approx3$--4\,mm から改善）→ 画像特徴量のばらつきが推論ノイズを増幅させていた可能性
+\end{itemize}
+
+\subsection{手先姿勢偏差（geodesic距離）}
+
+\begin{table}[h]
+  \centering\small
+  \caption{プレース・ピック時の手先姿勢偏差}
+  \begin{tabular}{lccc}
+    \toprule
+    モデル & mean\_geo [deg] & std\_geo [deg] & $\rho$（ラベルと姿勢偏差の相関） \\
+    \midrule
+    \texttt{motion\_copy}（基準） & $\approx 0.4$--$1.3$ & 小 & $\approx 0$ \\
+    \texttt{direct}               & $\approx 5$--$9$ & 中 & 低 \\
+    \texttt{res}                  & $\approx 5$--$9$ & 中 & ピック時 $\approx -0.47$ \\
+    \texttt{res\_nonImage}        & $\approx 5$--$9$ & 中 & 低 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\figph[0.55\linewidth]{ピック時の geodesic 偏差と $l_x$ の散布図（\texttt{res}，$\rho\approx-0.47$）}
+
+\textbf{考察}：
+\begin{itemize}
+  \item 全モデルで基準（$\approx1°$）より有意に大きな姿勢偏差（5〜9°）が存在；タスク成功率に影響し得る
+  \item \texttt{res} ではピック時の姿勢偏差と $l_x$ の間に $\rho\approx-0.47$ の相関：\textbf{残差予測が位置変位だけでなく姿勢変化も学習してしまっている}（「ラベルで変えたい成分以外も変わる」問題）
+  \item \texttt{res\_nonImage} では相関が見られない → 画像特徴量が姿勢干渉を媒介している可能性
+\end{itemize}
+
+\clearpage
+
+%% ========== Page 6：総合評価・今後の課題・参考文献 ==========
+\section{総合評価と今後の課題}
+
+\subsection{3モデル比較まとめ}
+
+\begin{table}[h]
+  \centering\small
+  \caption{3モデルの総合比較}
+  \begin{tabular}{lccc}
+    \toprule
+    指標 & \texttt{direct} & \texttt{res} & \texttt{res\_nonImage} \\
+    \midrule
+    ラベル追従性（$R^2$）    & 低（$\approx0.50$）     & \textbf{最高（$\approx0.87$）} & 高（$\approx0.77$） \\
+    単調増加性（$\rho$）     & 低（$\approx0.65$）     & \textbf{最高（$\approx0.94$）} & 高（$\approx0.88$） \\
+    試行間再現性（$\sigma$） & 非常に低（$\approx12$\,mm） & 中（$\approx3$--4\,mm） & \textbf{最高（$\approx1$\,mm）} \\
+    $[0,0]$ バイアス         & 中（$\approx9$\,mm）    & 大（$\approx19$\,mm） & 大（$\approx15$\,mm） \\
+    姿勢干渉                 & ランダム誤差             & \textbf{ラベルに相関あり} & ランダム誤差 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{結論}：残差予測の枠組みにより，目標とする単調増加性はある程度実現できることを確認した（\texttt{res}：$\rho\approx0.94$）．一方で，以下2点が明確な課題として浮かび上がった．
+
+\subsection{今後の課題と改善方向}
+
+\begin{description}
+  \item[\textbf{課題① $c=0$ 時の系統バイアス（15〜19\,mm）}]\mbox{}\\
+    \textit{原因仮説}：学習データの分布がオリジナル動作位置を中心に偏っていない．\\
+    \textit{改善}：損失関数への「残差ゼロ」ペナルティ追加；ILCによる反復補正（理論的には吸収可能）
+
+  \item[\textbf{課題② ラベルが姿勢にも影響（\texttt{res} ピック時 $\rho\approx-0.47$）}]\mbox{}\\
+    \textit{原因仮説}：残差 $\Delta\tau$ に位置変化と姿勢変化が混在している．\\
+    \textit{改善}：損失関数への姿勢固定制約；補正マスク $\tilde{M}$ を $\mathbb{R}^{T\times1}$ から $\mathbb{R}^{T\times D}$ に拡張して次元別補正を可能にする
+
+  \item[\textbf{次ステップ（フルモデル実装に向けて）}]\mbox{}\\
+    (1) 双方向Transformerによる一括補正モデルの実装（補正マスク $\tilde{M}$ の学習）\\
+    (2) Broyden法ILCループとの統合・系統バイアスの吸収実証\\
+    (3) 力情報を含む軌道（コネクター挿入，ねじ締め等）への適用
+\end{description}
+
+\subsection*{参考文献}
+
+{\small
+\begin{enumerate}[label={[\arabic*]}, leftmargin=2.5em]
+  \item T.~Buamanee et al., ``Bi-ACT: Bilateral Control-Based Imitation Learning via Action Chunking with Transformer,'' \textit{AIM}, 2024.
+  \item S.~Kobayashi et al., ``Bi-LAT: Bilateral Control-Based Imitation Learning via Natural Language and Action Chunking with Transformers,'' \textit{arXiv:2504.01301}, 2025.
+  \item Yamane et al., ``Motion ReTouch: Post-Editing of Motion Data Using Four-Channel Bilateral Control,'' \textit{IEEJ J.}, 2025. (arXiv:2502.20982)
+  \item T.~Johannink et al., ``Residual Reinforcement Learning for Robot Control,'' \textit{ICRA}, 2019.
+  \item D.~Ding et al., ``Goal-conditioned Imitation Learning,'' \textit{NeurIPS}, 2019.
+  \item C.-C.~Huang et al., ``TER-DAgger: Force-Aware Residual DAgger via Trajectory Editing,'' \textit{arXiv:2603.04038}, 2025.
+\end{enumerate}
+}
+
+\end{document}

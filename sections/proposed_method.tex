@@ -1,0 +1,38 @@
+\section{提案手法の概要と予備実験の位置付け}
+
+\subsection{三段構成}
+
+\begin{center}
+  \textbf{「数値ラベル $c$ を指定するだけで，ベース軌道から所望の量だけ変化した軌道を生成し，ロボットを自律動作させる」}
+\end{center}
+
+\figph{提案手法の全体フロー（Motion Retouch によるデータ収集 → 残差NN学習 → ILCによる反復収束）}
+
+\begin{enumerate}
+  \item \textbf{Motion Retouch によるデータ収集}：ベース軌道に対してプレース位置等を修正した軌道を複数収録し，残差 $\Delta\tau^{(k)} = \tau^{(k)}_\mathrm{corr} - \tau_\mathrm{base}$ とラベル $c$ のペアを得る
+  \item \textbf{残差NNの学習}：フル軌道 $\tau_\mathrm{base}$ とラベル $c$ を入力として補正量 $\Delta\tilde{\tau}$ を一括予測する双方向Transformer
+  \item \textbf{局所線形化ILC}：Broyden法でヤコビアン $J$ を逐次推定しながらラベルを更新し，目標値 $v^*$ への収束を保証
+\end{enumerate}
+
+$$c^{(k+1)} = c^{(k)} + \gamma \bigl(J^{(k)}\bigr)^\dagger e^{(k)}, \qquad e^{(k)} = v^* - v\!\left(\tau^{(k+1)}\right)$$
+
+\subsection{中核にある仮説}
+
+軌道全体を直接予測するより，ベース軌道からの\textbf{差分だけを予測する}方が，
+ラベルと出力変位の間の\textbf{線形性・単調増加性が強まる}．
+これが成立すれば，ILCによる安定した数値収束が可能になる．
+
+\subsection{今回の予備実験の位置付け}
+
+完全なシステム（双方向Transformer + ILC）の実装に先立ち，
+\textbf{残差NNが単調増加性を実際に持てるかどうか}を，
+シンプルな自己回帰モデルを用いた実機実験で検証する．
+
+\begin{center}
+  \fboxsep=5pt
+  \fbox{\parbox{0.9\linewidth}{\small
+    \textbf{検証仮説}：ラベル $[l_x,\,l_y]$ を変化させると，
+    実際のプレース変位がそれに追従して単調に変化する
+    （ILCが収束するための前提条件）
+  }}
+\end{center}
