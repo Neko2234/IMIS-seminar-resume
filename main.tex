@@ -75,13 +75,14 @@
 %
 \eabstract{%
     Bilateral control-based imitation learning (BCIL) enables high-quality robot demonstrations that include both position and force information.
-    However, when task conditions change---such as variations in object size, material, or target placement---new demonstrations must be collected and the model must be retrained from scratch.
-    This paper proposes a framework for post-correcting robot trajectories using a residual neural network (residual NN), which predicts only the deviation from a base trajectory conditioned on a user-specified numerical label.
-    Our central hypothesis is that predicting residuals rather than absolute trajectories yields a stronger monotone relationship between the label and the resulting motion, a property required for stable convergence via iterative learning control (ILC).
-    To test this hypothesis, we conduct a preliminary experiment on a pick-and-place task using a four-channel bilateral control system.
+    However, when task conditions change---such as variations in object size, material, or desired placement---new demonstrations must be collected and the model must be retrained from scratch.
+    This paper proposes a framework in which a user specifies a numerical label $\boldsymbol{c}$ (the difference between the target and current output) and the robot autonomously executes a trajectory that deviates from a base trajectory by the desired displacement, without any retraining.
+    Our central hypothesis is that predicting only the residual $\Delta\tau$ between the corrected and base trajectories, rather than the full trajectory, yields a stronger linear and monotone relationship between the label and the resulting motion---a property required for stable convergence via iterative learning control (ILC).
+    Training data for the residual neural network (NN) are collected efficiently using Motion ReTouch, a post-editing technology based on four-channel bilateral control.
+    To test this hypothesis, we conduct a preliminary experiment on a pick-and-place task.
     Three models are compared: a direct prediction model (\texttt{direct}), a residual prediction model (\texttt{res}), and a lightweight image-free residual model (\texttt{res\_nonImage}).
     Results show that \texttt{res} achieves $R^2 \approx 0.87$ and Spearman $\rho \approx 0.94$, supporting the hypothesis.
-    At the same time, systematic bias at label $\mathbf{c} = [0,0]$ and unintended orientation changes are identified as remaining challenges.
+    At the same time, systematic offset at label $\boldsymbol{c} = \boldsymbol{0}$ and label-correlated orientation changes are identified as remaining challenges.
 }
 
 \begin{document}
