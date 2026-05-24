@@ -23,7 +23,19 @@
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.92\linewidth]{figures/fig_label_scatter.pdf}
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig_label_scatter_cx.pdf}
+    \caption{$c_x$ 方向}
+    \label{fig:label_scatter_cx}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig_label_scatter_cy.pdf}
+    \caption{$c_y$ 方向}
+    \label{fig:label_scatter_cy}
+  \end{subfigure}
   \caption{ラベルとプレース変位の関係（各モデルの散布図と回帰直線）}
   \label{fig:label_scatter}
 \end{figure*}
