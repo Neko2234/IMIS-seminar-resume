@@ -1,11 +1,9 @@
 \section{実験結果と考察}
 \label{sec:results}
 
-\subsection{ラベル追従性（単調増加性の検証）}
+\subsection{ラベル追従性}
 
-各モデルについて，ラベルと実際のプレース変位の相関を表\,\ref{tab:monotone} に示す．
-なお，実験環境の座標系では，ラベル $\mathit{c}_x$ がロボット手先の $Y$ 軸変位と，
-ラベル $\mathit{c}_y$ が $X$ 軸変位とそれぞれ対応することが確認された（以降の分析ではこの対応関係を踏まえる）．
+各モデルについて，ラベルと実際のプレース変位の相関を図\,\ref{fig:label_scatter} および表\,\ref{tab:monotone} に示す．
 
 \begin{table*}[t]
   \centering
@@ -14,7 +12,7 @@
   \small
   \begin{tabular}{lcccc}
     \hline
-    モデル & $R^2$（$c_x$） & $R^2$（$c_y$） & $|\rho|$（$c_x$） & $|\rho|$（$c_y$） \\
+    モデル & $R^2$（$c_x$） & $R^2$（$c_y$） & $\rho$（$c_x$） & $\rho$（$c_y$） \\
     \hline
     \texttt{Direct w/ image}    & 0.56 & 0.50 & 0.66 & 0.76 \\
     \texttt{Residual w/ image}  & \textbf{0.94} & \textbf{0.78} & \textbf{0.97} & \textbf{0.85} \\
@@ -31,13 +29,13 @@
 \end{figure*}
 
 図\,\ref{fig:label_scatter} および表\,\ref{tab:monotone} に示すように，
-\texttt{Residual w/ image} は $|\rho| = 0.97$（$c_x$ 方向），$R^2 = 0.94$ と高い単調追従性を示した．
-これは\ref{sec:method}節の仮説――残差予測によって単調増加性が強まる――を実験的に支持する結果である．
-\texttt{Residual w/o image} も $|\rho| = 0.84$，$R^2 = 0.72$ と中程度の追従性を示し，
+\texttt{Residual w/ image} は $c_x$ 方向に $\rho = 0.97$，$R^2 = 0.94$ と高い単調追従性を示した．
+これは\ref{sec:method}節の仮説 --- 残差予測によって単調増加性が強まる --- を実験的に支持する結果である．
+\texttt{Residual w/o image} も  $c_x$ 方向に $\rho = 0.84$，$R^2 = 0.72$ と中程度の追従性を示し，
 画像なしの軽量構成でも有効であることが確認された．
 一方，\texttt{Direct w/ image} では $R^2 = 0.56$ にとどまり，
 フルシーケンス予測では単調性の実現が難しいことが示された．
-また $c_y$ 方向は全モデルで相関がやや低く，X 軸方向の制御精度の向上が今後の課題である．
+また $c_y$ 方向は全モデルで相関がやや低く，$c_y$ 方向の制御精度の向上が今後の課題である．
 
 \subsection{ラベル $\bm{c} = [0,0]$ 時の系統バイアス}
 
@@ -48,7 +46,7 @@
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.92\linewidth]{figures/fig_bias_scatter.pdf}
-  \caption{$\bm{c}=[0,0]$ 時のプレース位置分布．+ はモーションコピーの平均位置（基準点）を示す．}
+  \caption{$\bm{c}=[0,0]$ 時のプレース位置分布（ラベル座標系）．$+$ はモーションコピーの平均位置（基準点 $(0,0)$）を示す．}
   \label{fig:bias_scatter}
 \end{figure}
 
@@ -59,22 +57,22 @@
   \small
   \begin{tabular}{lrrr}
     \hline
-    モデル & $n$ & オフセット [mm] & $\sigma_x / \sigma_y$ [mm] \\
+    モデル & $n$ & オフセット [mm] & $\sigma_{c_x} / \sigma_{c_y}$ [mm] \\
     \hline
-    \texttt{Motion Copy}        & 5 & $\approx 0$   & 0.19 / 0.27 \\
-    \texttt{Direct w/ image}    & 5 & 10.4          & 5.83 / 8.24 \\
-    \texttt{Residual w/ image}  & 5 & 18.1          & 0.43 / 0.99 \\
-    \texttt{Residual w/o image} & 5 & 13.3          & 0.45 / 0.59 \\
+    \texttt{Motion Copy}        & 5 & $\approx 0$   & 0.27 / 0.19 \\
+    \texttt{Direct w/ image}    & 5 & 10.3          & 8.24 / 5.83 \\
+    \texttt{Residual w/ image}  & 5 & 18.1          & 0.99 / 0.43 \\
+    \texttt{Residual w/o image} & 5 & 13.3          & 0.59 / 0.45 \\
     \hline
   \end{tabular}
 \end{table}
 
 \texttt{Residual w/ image} および \texttt{Residual w/o image} はそれぞれ 18.1\,mm，13.3\,mm の
 系統的なオフセットが生じており，ラベル $[0,0]$ に対して残差ゼロを正確に学習できていないことを示す．
-このバイアスは \texttt{Direct w/ image} の 10.4\,mm より大きく，
-残差モデルの構造的な弱点といえる（ベース動作の記録時点と評価時点で環境状態が一致していない場合にバイアスが増大する）．
-一方，試行間ばらつき（$\sigma_x / \sigma_y$）は残差モデルで $0.43 / 0.99$\,mm および $0.45 / 0.59$\,mm と
-非常に小さく，\texttt{Direct w/ image} の $5.83 / 8.24$\,mm に対して高い再現性を示している．
+このバイアスは \texttt{Direct w/ image} の 10.3\,mm より大きく，
+残差モデルの構造的な弱点といえる．
+一方，試行間ばらつき（$\sigma_{c_x} / \sigma_{c_y}$）は残差モデルで $0.99 / 0.43$\,mm および $0.59 / 0.45$\,mm と
+非常に小さく，\texttt{Direct w/ image} の $8.24 / 5.83$\,mm に対して高い再現性を示している．
 このバイアスは，ILC ループによる反復修正で吸収できる可能性があり，今後の検証課題である．
 
 \subsection{試行間再現性（同一ラベル内標準偏差）}
@@ -89,11 +87,11 @@
   \label{fig:variance_bar}
 \end{figure*}
 
-モーションコピー（$\sigma_x \approx 0.34$\,mm, $\sigma_y \approx 0.48$\,mm）はハードウェア再現精度の上限を示す．
-\texttt{Direct w/ image} はこれより 1 桁以上大きい $\sigma_x \approx 9.1$\,mm, $\sigma_y \approx 10.2$\,mm を示し，
+\texttt{Motion Copy}（$\sigma_{c_x} \approx 0.30$\,mm, $\sigma_{c_y} \approx 0.21$\,mm）はハードウェア再現精度の上限を示す．
+\texttt{Direct w/ image} はこれより 1 桁以上大きい $\sigma_{c_x} \approx 10.2$\,mm, $\sigma_{c_y} \approx 9.1$\,mm を示し，
 フルシーケンス予測では推論ノイズが支配的であることが確認された．
-\texttt{Residual w/ image} は $\sigma_x \approx 2.1$\,mm, $\sigma_y \approx 2.0$\,mm と Direct より大幅に改善されているが，
-\texttt{Residual w/o image}（$\sigma_x \approx 0.69$\,mm, $\sigma_y \approx 0.94$\,mm）はさらに小さく，
+\texttt{Residual w/ image} は $\sigma_{c_x} \approx 2.1$\,mm, $\sigma_{c_y} \approx 2.1$\,mm と \texttt{Direct w/ image} より大幅に改善されているが，
+\texttt{Residual w/o image}（$\sigma_{c_x} \approx 0.75$\,mm, $\sigma_{c_y} \approx 0.57$\,mm）はさらに小さく，
 モーションコピー基準に近い再現性を示した．
 画像ありモデルでのばらつき増大は，照明・視点の微小変動によって画像特徴量が変動し，
 推論ノイズが増大したためと考えられる．
@@ -101,7 +99,7 @@
 \subsection{ピック時の手先位置偏差}
 
 ロボットはラベル $\bm{c}$ によってプレース位置のみを変えることが意図されており，
-ピック（把持）動作は全ラベルで同一であるべきである．
+ピック動作は全ラベルで同一であるべきである．
 しかし，図\,\ref{fig:pick_pos} に示すように，すべての学習モデルでラベル値に依存したピック位置のずれが観測された．
 
 \begin{figure*}[t]
@@ -133,10 +131,9 @@
 
 残差モデルでは In-dist でも 12\,mm 程度のピック位置ずれが生じており，
 OOD ラベルではさらに 23\,mm 程度まで増大する．
-これは，学習した残差 $\Delta\hat{\bm{\xi}}$ がピック段階の動作にも影響を及ぼしているためと考えられる：
+これは，学習した残差 $\Delta\hat{\bm{\xi}}$ がピック段階の動作にも影響を及ぼしているためと考えられる．
 理想的には残差はプレース前の特定区間にのみ作用すべきだが，
 現状ではシーケンス全体に残差が加算されているため，ピック動作も変位してしまっている．
 一方，\texttt{Direct w/ image} は残差ではなく絶対値を予測するため，
-ピック段階への干渉が相対的に少ないが，その代わりラベル追従性（$R^2$）が低い（\ref{sec:results}.1節参照）．
-ピック段階への残差干渉を抑制するためのアーキテクチャ改良（例：プレース区間限定の残差加算，
-もしくはピック・プレース動作の明示的な分離モデリング）が今後の課題として挙げられる．
+ピック段階への干渉が相対的に少ないが，その代わりラベル追従性が低い．
+プレース区間限定の残差加算，もしくはピック・プレース動作の明示的な分離モデリングといった，ピック段階への残差干渉を抑制するためのアーキテクチャ改良が今後の課題として挙げられる．

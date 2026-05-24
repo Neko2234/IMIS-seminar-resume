@@ -1,4 +1,9 @@
-"""Figure C: Within-label variance bar chart."""
+"""Figure C: Within-label variance bar chart in label coordinates.
+
+Uses absolute place position converted to label frame:
+  place_cx = -(place_y - ref_ry)   [label c_x direction]
+  place_cy =  (place_x - ref_rx)   [label c_y direction]
+"""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,20 +23,27 @@ DATA = {
 COLORS = {'Motion Copy': '#888888', 'Direct w/ image': '#e07b39',
           'Residual w/ image': '#4878cf', 'Residual w/o image': '#6acc65'}
 
-print("=== Within-label Standard Deviation ===")
-names_plot, means_x, errs_x, means_y, errs_y = [], [], [], [], []
+# Reference from Motion Copy
+mc = pd.read_csv(os.path.join(base, 'motion_copy_results_summary.csv'))
+ref_rx = mc['place_x'].mean()
+ref_ry = mc['place_y'].mean()
+
+print("=== Within-label Standard Deviation (label coordinates) ===")
+names_plot, means_cx, errs_cx, means_cy, errs_cy = [], [], [], [], []
 
 for name, fname in DATA.items():
     df = pd.read_csv(os.path.join(base, fname))
+    df['place_cx'] = -(df['place_y'] - ref_ry)
+    df['place_cy'] =   df['place_x'] - ref_rx
     grp = df.groupby(['label_x', 'label_y'])
-    std_x = grp['delta_x'].std().dropna()
-    std_y = grp['delta_y'].std().dropna()
-    mx, ex = std_x.mean(), std_x.std()
-    my, ey = std_y.mean(), std_y.std()
+    std_cx = grp['place_cx'].std().dropna()
+    std_cy = grp['place_cy'].std().dropna()
+    mcx, ecx = std_cx.mean(), std_cx.std()
+    mcy, ecy = std_cy.mean(), std_cy.std()
     names_plot.append(name)
-    means_x.append(mx); errs_x.append(ex)
-    means_y.append(my); errs_y.append(ey)
-    print(f"{name}: sigma_x_mean={mx:.2f}±{ex:.2f}  sigma_y_mean={my:.2f}±{ey:.2f}")
+    means_cx.append(mcx); errs_cx.append(ecx)
+    means_cy.append(mcy); errs_cy.append(ecy)
+    print(f"{name}: sigma_cx={mcx:.2f}±{ecx:.2f}  sigma_cy={mcy:.2f}±{ecy:.2f}")
 
 fig, axes = plt.subplots(1, 2, figsize=(6.5, 3.0), sharey=False)
 short = [n.replace(' w/ image', '\n(w/ img)').replace(' w/o image', '\n(w/o img)') for n in names_plot]
@@ -40,16 +52,16 @@ x = np.arange(len(names_plot))
 w = 0.6
 
 for ax, means, errs, axis_label in zip(axes,
-        [means_x, means_y], [errs_x, errs_y], ['$\\sigma_{\\Delta x}$ [mm]', '$\\sigma_{\\Delta y}$ [mm]']):
-    bars = ax.bar(x, means, w, yerr=errs, capsize=4, color=colors, edgecolor='black', linewidth=0.5)
-    mc_val = means[0]
-    ax.axhline(mc_val, color='gray', linestyle='--', linewidth=1.2, label='Motion Copy baseline')
+        [means_cx, means_cy], [errs_cx, errs_cy],
+        [r'$\sigma_{\Delta c_x}$ [mm]', r'$\sigma_{\Delta c_y}$ [mm]']):
+    ax.bar(x, means, w, yerr=errs, capsize=4, color=colors, edgecolor='black', linewidth=0.5)
+    ax.axhline(means[0], color='gray', linestyle='--', linewidth=1.2, label='Motion Copy baseline')
     ax.set_xticks(x); ax.set_xticklabels(short, ha='center')
     ax.set_ylabel(axis_label)
     ax.grid(axis='y', alpha=0.3)
 
-axes[0].set_title('(a) $X$ direction')
-axes[1].set_title('(b) $Y$ direction')
+axes[0].set_title(r'(a) $c_x$ direction')
+axes[1].set_title(r'(b) $c_y$ direction')
 axes[0].legend(fontsize=7.5)
 
 plt.tight_layout()
