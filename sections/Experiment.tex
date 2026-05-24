@@ -5,9 +5,16 @@
 
 \ref{sec:method}節の仮説，すなわち
 ``残差予測によってILCの収束を満たすための性質が強まる'' ことを実験的に検証する．
-評価には積み木のピックアンドプレースタスクを用い，
+評価には図\,\ref{fig:pick_and_place} に示す積み木のピックアンドプレースタスクを用い，
 プレース位置の変位 $\bm{c} = [\mathit{c}_x,\, \mathit{c}_y]$（各軸方向への移動量，単位 mm）をラベルとして与えたとき，
 実際のプレース変位がラベルに対してどのように変化するかを定量的に検証した．
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{figures/ExperimentEnvironment.png}
+  \caption{ピックアンドプレースタスクの環境}
+  \label{fig:pick_and_place}
+\end{figure}
 
 \subsection{学習データの収集}
 

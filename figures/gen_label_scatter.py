@@ -48,6 +48,16 @@ for name, fname in DATA.items():
     df['disp_cy'] =   df['place_x'] - ref_rx
     model_data[name] = df
 
+# Compute shared y-axis range across both panels
+all_y = []
+for lbl_col, dsp_col, *_ in PANELS:
+    for name in DATA:
+        y = model_data[name][dsp_col].dropna().values
+        all_y.extend(y)
+pad = 5
+y_shared = (min(all_y) - pad, max(all_y) + pad)
+print(f"Shared y-axis range: {y_shared[0]:.1f} to {y_shared[1]:.1f}\n")
+
 for lbl_col, dsp_col, xlabel, ylabel, outname in PANELS:
     fig, ax = plt.subplots(figsize=(3.4, 3.0))
     for name in DATA:
@@ -65,6 +75,7 @@ for lbl_col, dsp_col, xlabel, ylabel, outname in PANELS:
         print(f"{name}: {lbl_col}->{dsp_col}  R2={r2:.3f}  rho={rho:.3f}  slope={slope:.3f}")
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
+    ax.set_ylim(y_shared)
     ax.axhline(0, color='gray', linewidth=0.5, linestyle='--')
     ax.axvline(0, color='gray', linewidth=0.5, linestyle='--')
     ax.legend(loc='upper left', framealpha=0.85, fontsize=7)

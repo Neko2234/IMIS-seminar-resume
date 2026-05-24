@@ -45,26 +45,32 @@ for name, fname in DATA.items():
     means_cy.append(mcy); errs_cy.append(ecy)
     print(f"{name}: sigma_cx={mcx:.2f}±{ecx:.2f}  sigma_cy={mcy:.2f}±{ecy:.2f}")
 
-fig, axes = plt.subplots(1, 2, figsize=(6.5, 3.0), sharey=False)
 short = [n.replace(' w/ image', '\n(w/ img)').replace(' w/o image', '\n(w/o img)') for n in names_plot]
 colors = [COLORS[n] for n in names_plot]
 x = np.arange(len(names_plot))
 w = 0.6
 
-for ax, means, errs, axis_label in zip(axes,
-        [means_cx, means_cy], [errs_cx, errs_cy],
-        [r'$\sigma_{\Delta c_x}$ [mm]', r'$\sigma_{\Delta c_y}$ [mm]']):
+PANELS = [
+    (means_cx, errs_cx, r'$\sigma_{\Delta c_x}$ [mm]', 'fig_variance_bar_cx'),
+    (means_cy, errs_cy, r'$\sigma_{\Delta c_y}$ [mm]', 'fig_variance_bar_cy'),
+]
+
+# Shared y-axis: span from bottom of lowest error bar to top of tallest bar+error
+y_top = max(m + e for means, errs, *_ in PANELS for m, e in zip(means, errs) if np.isfinite(e))
+y_bot = min(m - e for means, errs, *_ in PANELS for m, e in zip(means, errs) if np.isfinite(e))
+margin = (y_top - y_bot) * 0.08
+y_shared = (y_bot - margin, y_top + margin)
+print(f"Shared y-axis range: {y_shared[0]:.1f} to {y_shared[1]:.1f}\n")
+
+for means, errs, axis_label, outname in PANELS:
+    fig, ax = plt.subplots(figsize=(3.2, 3.0))
     ax.bar(x, means, w, yerr=errs, capsize=4, color=colors, edgecolor='black', linewidth=0.5)
-    ax.axhline(means[0], color='gray', linestyle='--', linewidth=1.2, label='Motion Copy baseline')
     ax.set_xticks(x); ax.set_xticklabels(short, ha='center')
     ax.set_ylabel(axis_label)
+    ax.set_ylim(y_shared)
     ax.grid(axis='y', alpha=0.3)
-
-axes[0].set_title(r'(a) $c_x$ direction')
-axes[1].set_title(r'(b) $c_y$ direction')
-axes[0].legend(fontsize=7.5)
-
-plt.tight_layout()
-plt.savefig(os.path.join(base, 'fig_variance_bar.pdf'), bbox_inches='tight')
-plt.savefig(os.path.join(base, 'fig_variance_bar.png'), bbox_inches='tight')
-print("Saved fig_variance_bar.pdf/png")
+    plt.tight_layout()
+    plt.savefig(os.path.join(base, outname + '.pdf'), bbox_inches='tight')
+    plt.savefig(os.path.join(base, outname + '.png'), bbox_inches='tight')
+    plt.close()
+    print(f"Saved {outname}.pdf/png")

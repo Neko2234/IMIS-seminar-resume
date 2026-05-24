@@ -89,12 +89,24 @@
 
 \subsection{試行間再現性（同一ラベル内標準偏差）}
 
-各モデルの同一ラベル内標準偏差 $\sigma_{\Delta x}$，$\sigma_{\Delta y}$ の全ラベル平均を
+各モデルの同一ラベル内標準偏差 $\sigma_{\Delta c_x}$，$\sigma_{\Delta c_y}$ の全ラベル平均を
 図\,\ref{fig:variance_bar} に示す．
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.90\linewidth]{figures/fig_variance_bar.pdf}
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig_variance_bar_cx.pdf}
+    \caption{$c_x$ 方向}
+    \label{fig:variance_bar_cx}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig_variance_bar_cy.pdf}
+    \caption{$c_y$ 方向}
+    \label{fig:variance_bar_cy}
+  \end{subfigure}
   \caption{同一ラベル内プレース変位標準偏差の比較．破線はモーションコピーの基準値を示す．}
   \label{fig:variance_bar}
 \end{figure*}
@@ -117,7 +129,7 @@
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.92\linewidth]{figures/fig_pick_pos.pdf}
-  \caption{ラベル空間 $(c_x, c_y)$ 上のピック位置偏差ヒートマップ（モーションコピー平均ピック位置からのユークリッド距離）．灰色セルは未試行ラベルを示す．}
+  \caption{モーションコピー平均ピック位置からのピック位置偏差ヒートマップ．灰色セルは未試行ラベルを示す．}
   \label{fig:pick_pos}
 \end{figure*}
 
