@@ -21,7 +21,7 @@ DATA = {
     'Residual w/ image':   'res_results_summary.csv',
     'Residual w/o image':  'res_nonImage_results_summary.csv',
 }
-COLORS = {'Motion Copy': '#333333', 'Direct w/ image': '#e07b39',
+COLORS = {'Motion Copy': '#aaaaaa', 'Direct w/ image': '#e07b39',
           'Residual w/ image': '#4878cf', 'Residual w/o image': '#6acc65'}
 MARKERS = {'Motion Copy': 'D', 'Direct w/ image': 'o',
            'Residual w/ image': 's', 'Residual w/o image': '^'}
@@ -41,7 +41,7 @@ for name, fname in DATA.items():
     cx = -(sub['place_y'].values - ref_ry)   # label c_x direction
     cy =   sub['place_x'].values - ref_rx    # label c_y direction
     ax.scatter(cx, cy, s=40, color=COLORS[name], marker=MARKERS[name],
-               label=f'{name} (n={len(sub)})', zorder=3, alpha=0.85)
+               label=f'{name}', zorder=3, alpha=0.85)
     mean_cx, mean_cy = cx.mean(), cy.mean()
     offset = np.sqrt(mean_cx**2 + mean_cy**2)
     print(f"{name}: n={len(sub)}  mean_cx={mean_cx:.1f}  mean_cy={mean_cy:.1f}"
@@ -52,8 +52,7 @@ ax.plot(0, 0, 'k+', markersize=14, markeredgewidth=2, zorder=5, label='Reference
 
 ax.set_xlabel(r'$\Delta c_x$ [mm]')
 ax.set_ylabel(r'$\Delta c_y$ [mm]')
-ax.set_title(r'Place position at $\mathbf{c}=[0,0]$')
-ax.legend(loc='best', framealpha=0.85)
+ax.legend(loc='lower left', framealpha=0.85)
 ax.grid(True, alpha=0.3)
 
 plt.tight_layout()

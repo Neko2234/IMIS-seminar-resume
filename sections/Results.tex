@@ -12,7 +12,7 @@
   \small
   \begin{tabular}{lcccc}
     \hline
-    モデル & $R^2$（$c_x$） & $R^2$（$c_y$） & $\rho$（$c_x$） & $\rho$（$c_y$） \\
+    Model & $R^2$（$c_x$） & $R^2$（$c_y$） & $\rho$（$c_x$） & $\rho$（$c_y$） \\
     \hline
     \texttt{Direct w/ image}    & 0.56 & 0.50 & 0.66 & 0.76 \\
     \texttt{Residual w/ image}  & \textbf{0.94} & \textbf{0.78} & \textbf{0.97} & \textbf{0.85} \\
@@ -64,12 +64,12 @@
 
 \begin{table}[t]
   \centering
-  \caption{$\bm{c}=[0,0]$ 時のプレース位置オフセットと試行間標準偏差}
+  \caption{$\bm{c}=[0,0]$ 時のプレース位置オフセットの平均値と試行間標準偏差}
   \label{tab:bias}
   \small
-  \begin{tabular}{lrrr}
+  \begin{tabular}{lccc}
     \hline
-    モデル & $n$ & オフセット [mm] & $\sigma_{c_x} / \sigma_{c_y}$ [mm] \\
+    Model & $n$ & offset [mm] & $\sigma_{c_x} / \sigma_{c_y}$ [mm] \\
     \hline
     \texttt{Motion Copy}        & 5 & $\approx 0$   & 0.27 / 0.19 \\
     \texttt{Direct w/ image}    & 5 & 10.3          & 8.24 / 5.83 \\
@@ -132,7 +132,7 @@
   \small
   \begin{tabular}{lrr}
     \hline
-    モデル & In-dist [mm] & OOD [mm] \\
+    Model & In-dist [mm] & OOD [mm] \\
     \hline
     \texttt{Direct w/ image}    & 7.3  & 10.8 \\
     \texttt{Residual w/ image}  & 12.4 & 23.8 \\
