@@ -19,9 +19,9 @@
 \subsection{学習データの収集}
 
 まず，``掴んだ積み木をそのまま置く'' 基準動作をベース動作データとして収録した．
-次に Motion Retouch を用いて，プレース位置を $X$・$Y$ 方向にそれぞれ $\pm5\,\text{mm}$ ずらした 8 箇所と，何も修正しなかった場合の 1 箇所，計 9 箇所に対して各 5 回の修正動作を収録し，合計 45 本のデータを収集した．
+次に Motion ReTouch を用いて，プレース位置を $X$・$Y$ 方向にそれぞれ $\pm5\,\text{mm}$ ずらした 8 箇所と，何も修正しなかった場合の 1 箇所，計 9 箇所に対して各 5 回の修正動作を収録し，合計 45 本のデータを収集した．
 各修正動作にラベル $\bm{c} = [\mathit{c}_x, \mathit{c}_y]$ を付与し，
-ベース動作データとの差分 $\Delta\xi^{(\bm{c})}$ を教師残差とした．
+ベース動作データとの差分 $\Delta\bm{\xi}^{(\bm{c})}$ を教師残差とした．
 
 \subsection{検証モデル}
 
@@ -35,15 +35,15 @@
     モデル名 & 入力 & 出力 & 特徴 \\
     \hline
     \texttt{Direct w/ image} & 関節状態・画像・ラベル & 絶対値（修正後） & 全ステップをNN予測 \\
-    \texttt{Residual w/ image} & 関節状態・画像・ラベル & 残差 $\Delta\xi$ & ベース再生＋残差加算 \\
-    \texttt{Residual w/o image} & 関節状態・ラベル & 残差 $\Delta\xi$ & 画像入力なし \\
+    \texttt{Residual w/ image} & 関節状態・画像・ラベル & 残差 $\Delta\bm{\xi}$ & ベース再生＋残差加算 \\
+    \texttt{Residual w/o image} & 関節状態・ラベル & 残差 $\Delta\bm{\xi}$ & 画像入力なし \\
     \hline
   \end{tabular}
 \end{table*}
 
 表\,\ref{tab:models} に示す 3 モデルを比較した．
 \texttt{Direct w/ image} はロボットの観測とラベルから修正後動作データを直接予測する．
-\texttt{Residual w/ image} と \texttt{Residual w/o image} は残差 $\Delta\xi$ を予測し，
+\texttt{Residual w/ image} と \texttt{Residual w/o image} は残差 $\Delta\bm{\xi}$ を予測し，
 実行時はモーションコピーで再生したベース動作データに残差を加算することで動作を生成する．
 モーションコピーとは，ベース動作データから得られた関節角指令値をそのままロボットに入力して動作を再現するシステムであり，本研究ではラベル $\bm{c} = [0,0]$ の補正なしに対応する動作の基準として機能する．
 ハードウェア再現精度の上限を確認するため，モーションコピー単体（\texttt{Motion Copy}）の計測値も評価基準として用いた．

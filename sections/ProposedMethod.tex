@@ -17,7 +17,7 @@
 
 提案フレームワークは次の三段構成をとる．
 \begin{enumerate}
-  \item \textbf{残差データの収集}：Motion Retouch \cite{Inami2025} を用いて，ベース動作データに対する修正後動作データ $\bm{\xi}_\text{corr}$ を収録し， ラベル $\bm{c}$ に対応する教師残差 $\Delta\bm{\xi}^{(\bm{c})} = \bm{\xi}^{(\bm{c})}_\text{corr} - \bm{\xi}_\text{base}$ を得る．
+  \item \textbf{残差データの収集}：Motion ReTouch \cite{Inami2025} を用いて，ベース動作データに対する修正後動作データ $\bm{\xi}_\text{corr}$ を収録し， ラベル $\bm{c}$ に対応する教師残差 $\Delta\bm{\xi}^{(\bm{c})} = \bm{\xi}^{(\bm{c})}_\text{corr} - \bm{\xi}_\text{base}$ を得る．
   \item \textbf{残差NNの学習}：ラベル $\bm{c}$ を条件として，観測から $\Delta\bm{\xi}^{(\bm{c})}$ を予測する残差NNを学習する．
   \item \textbf{ILCによる反復収束}：学習済みNNを用いてロボットを実行し，出力誤差をラベルに反映させる更新則を反復することで，目標値への収束を実現する．
 \end{enumerate}
