@@ -68,4 +68,4 @@
 
 推論時にはAction Chunking with Transformers \cite{Zhao2023ACT} に倣ったTemporal Ensembleを適用し，
 ローリングバッファに蓄積した予測の平均によって推論ノイズを低減する．
-最終的な出力軌道 $\hat{\bm{y}}$ は，ベース動作データ $\bm{\xi}_\text{base}$ の対応するステップの値に，予測残差 $\Delta\hat{\bm{y}}$ に Temporal Ensemble をかけたものを加算することで得られる．
+最終的な出力軌道 $\hat{\bm{y}}$ は，ベース動作データ $\bm{\xi}_\text{base}$ の対応するステップの値に対して，予測残差 $\Delta\hat{\bm{y}}$ に Temporal Ensemble をかけたものを加算することで得られる．

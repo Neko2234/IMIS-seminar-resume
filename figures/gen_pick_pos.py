@@ -15,6 +15,9 @@ MODELS = {
     'Residual w/o image':  'res_nonImage_results_summary.csv',
 }
 TRAIN_LABELS = {(0,0),(5,0),(-5,0),(0,5),(0,-5),(5,5),(5,-5),(-5,5),(-5,-5)}
+# OOD labels tested by all three models (fair comparison)
+COMMON_OOD = {(-7,0),(-3,-3),(-3,0),(-3,3),(0,-7),(0,-3),(0,3),(0,7),(3,-3),(3,0),(3,3),(7,0)}
+ALL_COMMON = TRAIN_LABELS | COMMON_OOD
 
 mc_df = pd.read_csv(os.path.join(base, 'motion_copy_results_summary.csv'))
 ref_pick_x = mc_df['pick_x'].mean()
@@ -69,21 +72,13 @@ for ax, (name, fname) in zip(axes, MODELS.items()):
     excluded_lbl_str = ', '.join([f'({lx},{ly})' for lx, ly in excluded])
     print(f"\n{name}:")
     print(f"  Excluded labels (pick failures): {excluded_lbl_str if excluded else 'none'}")
-    # In-dist successful labels
-    valid = df.copy()
-    in_dist_dev = []
-    for (lx, ly) in in_dist:
+    all_dev = []
+    for (lx, ly) in ALL_COMMON:
         sub = df[(df['label_x']==lx) & (df['label_y']==ly)]
         if len(sub) > 0:
             d = np.sqrt((sub['pick_x'] - ref_pick_x)**2 + (sub['pick_y'] - ref_pick_y)**2)
-            in_dist_dev.append(d.mean())
-    ood_dev = []
-    for i, ly in enumerate(ly_vals):
-        for j, lx in enumerate(lx_vals):
-            if not np.isnan(grid[i,j]) and (lx, ly) not in TRAIN_LABELS:
-                ood_dev.append(grid[i,j])
-    print(f"  In-dist pick deviation: mean={np.mean(in_dist_dev):.1f} mm")
-    print(f"  OOD pick deviation:     mean={np.mean(ood_dev):.1f} mm" if ood_dev else "  No OOD data")
+            all_dev.append(d.mean())
+    print(f"  Pick deviation (common labels, n={len(all_dev)}): mean={np.mean(all_dev):.1f} mm")
     # Within-label std for pick position
     within_std = []
     for (lx, ly), sub in df.groupby(['label_x', 'label_y']):
