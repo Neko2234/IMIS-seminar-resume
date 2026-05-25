@@ -34,9 +34,9 @@ print("Label coords: disp_cx = -(place_y - ref_ry),  disp_cy = place_x - ref_rx\
 print("=== Label Following Statistics (label coordinate displacements) ===")
 
 PANELS = [
-    ('label_x', 'disp_cx', r'$c_x$ [mm]', r'$\Delta_{\rm place}\,c_x$ [mm]',
+    ('label_x', 'disp_cx', r'$c_x$ [cm]', r'$\Delta_{\rm place}\,c_x$ [mm]',
      'fig_label_scatter_cx'),
-    ('label_y', 'disp_cy', r'$c_y$ [mm]', r'$\Delta_{\rm place}\,c_y$ [mm]',
+    ('label_y', 'disp_cy', r'$c_y$ [cm]', r'$\Delta_{\rm place}\,c_y$ [mm]',
      'fig_label_scatter_cy'),
 ]
 
