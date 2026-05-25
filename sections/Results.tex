@@ -58,7 +58,7 @@
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.92\linewidth]{figures/fig_bias_scatter.pdf}
-  \caption{$\bm{c}=[0,0]$ 時のプレース位置分布（ラベル座標系）．$+$ はモーションコピーの平均位置（基準点 $(0,0)$）を示す．}
+  \caption{$\bm{c}=[0,0]$ 時のプレース位置分布．$+$ はモーションコピーの平均位置（基準点 $(0,0)$）を示す．}
   \label{fig:bias_scatter}
 \end{figure}
 
@@ -111,7 +111,7 @@
   \label{fig:variance_bar}
 \end{figure*}
 
-\texttt{Motion Copy}（$\sigma_{c_x} \approx 0.30$\,mm, $\sigma_{c_y} \approx 0.21$\,mm）はハードウェア再現精度の上限を示す．
+\texttt{Motion Copy}（全ラベル平均：$\sigma_{c_x} \approx 0.30$\,mm, $\sigma_{c_y} \approx 0.21$\,mm）はハードウェア再現精度の上限を示す．なお表\,\ref{tab:bias} に示す $\sigma$ は $\bm{c}=[0,0]$ 時の 5 試行のみを対象とした値であり，測定対象が異なるため数値が若干異なる．
 \texttt{Direct w/ image} はこれより 1 桁以上大きい $\sigma_{c_x} \approx 10.2$\,mm, $\sigma_{c_y} \approx 9.1$\,mm を示し，
 フルシーケンス予測では推論ノイズが支配的であることが確認された．
 \texttt{Residual w/ image} は $\sigma_{c_x} \approx 2.1$\,mm, $\sigma_{c_y} \approx 2.1$\,mm と \texttt{Direct w/ image} より大幅に改善されているが，
