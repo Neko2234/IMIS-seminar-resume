@@ -29,7 +29,7 @@ ref_rx = mc['place_x'].mean()
 ref_ry = mc['place_y'].mean()
 
 print("=== Within-label Standard Deviation (label coordinates) ===")
-names_plot, means_cx, errs_cx, means_cy, errs_cy = [], [], [], [], []
+names_plot, means_cx, means_cy = [], [], []
 
 for name, fname in DATA.items():
     df = pd.read_csv(os.path.join(base, fname))
@@ -38,12 +38,10 @@ for name, fname in DATA.items():
     grp = df.groupby(['label_x', 'label_y'])
     std_cx = grp['place_cx'].std().dropna()
     std_cy = grp['place_cy'].std().dropna()
-    mcx, ecx = std_cx.mean(), std_cx.std()
-    mcy, ecy = std_cy.mean(), std_cy.std()
     names_plot.append(name)
-    means_cx.append(mcx); errs_cx.append(ecx)
-    means_cy.append(mcy); errs_cy.append(ecy)
-    print(f"{name}: sigma_cx={mcx:.2f}±{ecx:.2f}  sigma_cy={mcy:.2f}±{ecy:.2f}")
+    means_cx.append(std_cx.mean())
+    means_cy.append(std_cy.mean())
+    print(f"{name}: sigma_cx={std_cx.mean():.2f}  sigma_cy={std_cy.mean():.2f}")
 
 short = [n.replace(' w/ image', '\n(w/ img)').replace(' w/o image', '\n(w/o img)') for n in names_plot]
 colors = [COLORS[n] for n in names_plot]
@@ -51,20 +49,18 @@ x = np.arange(len(names_plot))
 w = 0.6
 
 PANELS = [
-    (means_cx, errs_cx, r'$\sigma_{\Delta c_x}$ [mm]', 'fig_variance_bar_cx'),
-    (means_cy, errs_cy, r'$\sigma_{\Delta c_y}$ [mm]', 'fig_variance_bar_cy'),
+    (means_cx, r'$\sigma_{\Delta c_x}$ [mm]', 'fig_variance_bar_cx'),
+    (means_cy, r'$\sigma_{\Delta c_y}$ [mm]', 'fig_variance_bar_cy'),
 ]
 
-# Shared y-axis: span from bottom of lowest error bar to top of tallest bar+error
-y_top = max(m + e for means, errs, *_ in PANELS for m, e in zip(means, errs) if np.isfinite(e))
-y_bot = min(m - e for means, errs, *_ in PANELS for m, e in zip(means, errs) if np.isfinite(e))
-margin = (y_top - y_bot) * 0.08
-y_shared = (y_bot - margin, y_top + margin)
+y_top = max(m for means, *_ in PANELS for m in means if np.isfinite(m))
+margin = y_top * 0.08
+y_shared = (0, y_top + margin)
 print(f"Shared y-axis range: {y_shared[0]:.1f} to {y_shared[1]:.1f}\n")
 
-for means, errs, axis_label, outname in PANELS:
+for means, axis_label, outname in PANELS:
     fig, ax = plt.subplots(figsize=(3.2, 3.0))
-    ax.bar(x, means, w, yerr=errs, capsize=4, color=colors, edgecolor='black', linewidth=0.5)
+    ax.bar(x, means, w, color=colors, edgecolor='black', linewidth=0.5)
     ax.set_xticks(x); ax.set_xticklabels(short, ha='center')
     ax.set_ylabel(axis_label)
     ax.set_ylim(y_shared)
